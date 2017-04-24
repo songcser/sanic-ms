@@ -1,0 +1,6 @@
+/.settings
+/.idea
+*.pyc
+/.project
+/.pydevproject
+*.DS_Store
