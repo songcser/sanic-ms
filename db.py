@@ -4,7 +4,6 @@
 import logging
 
 from asyncpg import connect, create_pool
-from config import DB_CONFIG
 
 
 logger = logging.getLogger('sanic')
@@ -32,7 +31,7 @@ class BaseConnection(object):
     def acquire(self):
         return self._pool.acquire()
 
-    async def init(self):
+    async def init(self, DB_CONFIG):
         self._pool = await create_pool(**DB_CONFIG, loop=self._loop, max_size=100)
         return self
 
