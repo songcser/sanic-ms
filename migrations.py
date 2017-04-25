@@ -18,12 +18,12 @@ class MigrationModel(object):
         if self._model:
             dis = getattr(self._model._meta, 'distribute', None)
             if dis:
-                qc = self.db.compiler()
+                qc = self._db.compiler()
                 qt = list(qc.create_table(self._model, safe=True))
                 qt[0] += dis
-                self.db.execute_sql(*tuple(qt))
+                self._db.execute_sql(*tuple(qt))
             else:
-                self.db.create_table(self._model, safe=True)
+                self._db.create_table(self._model, safe=True)
             self._name = self._model._meta.db_table
 
     def add_column(self, col, field=None):
