@@ -5,17 +5,23 @@ import logging
 
 from sanic import Sanic
 from sanic.response import json, text
+from sanic_openapi import swagger_blueprint, openapi_blueprint
 
-from views import data_bl
-from db import BaseConnection
-from client import Client
+from config import DB_CONFIG
+from ethicall_common.db import BaseConnection
+from ethicall_common.client import Client
 
 logger = logging.getLogger('sanic')
+# make app
 app = Sanic(__name__)
+
+app.blueprint(openapi_blueprint)
+app.blueprint(swagger_blueprint)
+
 
 @app.listener('before_server_start')
 async def before_srver_start(app, loop):
-    app.db = await BaseConnection(loop=loop).init()
+    app.db = await BaseConnection(loop=loop).init(DB_CONFIG=DB_CONFIG)
     app.client =  Client(loop=loop)
 
 @app.listener('before_server_stop')
@@ -33,14 +39,3 @@ async def cros(request):
 async def cors_res(request, response):
     response.headers["Access-Control-Allow-Origin"] = "*"
 
-@app.route("/")
-async def test(request):
-    return text('Hello world!')
-
-@app.route("/<test:int>/<ffff>")
-async def test_dddd(request):
-    return text('Hello world!')
-
-app.blueprint(data_bl)
-if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8000, debug=True)
