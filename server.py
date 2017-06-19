@@ -30,12 +30,15 @@ async def before_server_stop(app, loop):
 
 @app.middleware('request')
 async def cros(request):
-    logger.info(request.method)
     if request.method == 'OPTIONS':
-        headers = {'Access-Control-Allow-Origin': '*'}
-        return response.json({'message': 'Hello World'}, headers=headers)
+        headers = {'Access-Control-Allow-Origin': '*',
+                   'Access-Control-Allow-Headers': 'Content-Type',
+                   'Access-Control-Allow-Method': 'POST, PUT, DELETE'}
+        return json({'message': 'Hello World'}, headers=headers)
 
 @app.middleware('response')
 async def cors_res(request, response):
     response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
+    response.headers["Access-Control-Allow-Method"] = "POST, PUT, DELETE"
 

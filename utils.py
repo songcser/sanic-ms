@@ -1,36 +1,55 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import datetime
+
 def jsonify(records):
     """
     Parse asyncpg record response into JSON format
     """
     return [dict(r.items()) for r in records]
 
-def insert_sql(table, **kwargs):
+def insert_sql(table, data):
     sql = ["INSERT INTO {} (".format(table)]
     index, names, values, params = 1, [], [], []
-    for k, v in kwargs.items():
-        values.append("${}".format(index))
+    if 'create_time' not in data:
+        data.update({'create_time': datetime.datetime.utcnow()})
+    for k, v in data.items():
+        if k == "id":
+            continue
         if isinstance(v, list):
             names.append(k)
-            params.append('array{}'.format(v))
+            for value in v:
+                ids = []
+                if isinstance(value, dict) and 'id' in value:
+                    ids.append(value['id'])
+                else:
+                    ids.append(value)
+            #params.append('{ %s }' % ",".join('"%s"' % i for i in ids))
+            params.append(ids)
+            values.append("${}".format(index))
+            index += 1
         elif isinstance(v, dict):
-            id = getattr(v, "id", None)
+            id = v["id"] if "id" in v else None
             if id:
                 names.append(k)
                 params.append(id)
+                values.append("${}".format(index))
+                index += 1
         else:
             names.append(k)
             params.append(v)
-    sql.append(",".join(names)).append("VALUES (").append(",".join(values)).append(");").append("RETURNING id")
+            values.append("${}".format(index))
+            index += 1
+    sql.append('{}) VALUES ({}) RETURNING id'.format(",".join(names), ",".join(values)))
     return " ".join(sql), params
 
-def select_sql(sql=None, limit=None, offset=None, **kwargs):
+def select_sql(table, values=None, limit=None, offset=None, **kwargs):
+    sql = [""" SELECT {} FROM {}""".format(",".join(values) if values else "*", table)]
     index, params, sub = 1, [], []
     for k, v in kwargs.items():
         if not v: continue
-        sub.append("%s = $%s" % (k, index))
+        sub.append("{} = ${}".format(k, index))
         params.append(v)
         index += 1
     if sub:
