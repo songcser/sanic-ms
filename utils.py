@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 import datetime
+
+logger = logging.getLogger('sanic')
 
 def jsonify(records):
     """
@@ -48,10 +51,16 @@ def select_sql(table, values=None, limit=None, offset=None, **kwargs):
     sql = [""" SELECT {} FROM {}""".format(",".join(values) if values else "*", table)]
     index, params, sub = 1, [], []
     for k, v in kwargs.items():
-        if not v: continue
-        sub.append("{} = ${}".format(k, index))
-        params.append(v)
-        index += 1
+        if v is None: continue
+        if v == 'NULL':
+            sub.append("{} is NULL".format(k))
+        elif isinstance(v, list):
+            logger.info(v)
+            sub.append("{} in ({})".format(k, ",".join(v)))
+        else:
+            sub.append("{} = ${}".format(k, index))
+            params.append(v)
+            index += 1
     if sub:
         sql.append("WHERE")
         sql.append(" AND ".join(sub))
