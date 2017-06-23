@@ -19,8 +19,8 @@ def insert_sql(table, data):
             continue
         if isinstance(v, list):
             names.append(k)
+            ids = []
             for value in v:
-                ids = []
                 if isinstance(value, dict) and 'id' in value:
                     ids.append(value['id'])
                 else:

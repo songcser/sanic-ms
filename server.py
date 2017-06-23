@@ -22,11 +22,7 @@ app.blueprint(swagger_blueprint)
 @app.listener('before_server_start')
 async def before_srver_start(app, loop):
     app.db = await BaseConnection(loop=loop).init(DB_CONFIG=DB_CONFIG)
-    app.client =  Client(loop=loop)
 
-@app.listener('before_server_stop')
-async def before_server_stop(app, loop):
-    app.client.close()
 
 @app.middleware('request')
 async def cros(request):
