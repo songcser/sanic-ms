@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import datetime
+import arrow
 
 logger = logging.getLogger('sanic')
 
@@ -15,10 +15,13 @@ def jsonify(records):
 def insert_sql(table, data):
     sql = ["INSERT INTO {} (".format(table)]
     index, names, values, params = 1, [], [], []
+    now = arrow.utcnow()
     if 'create_time' not in data:
-        data.update({'create_time': datetime.datetime.utcnow()})
+        data.update({'create_time': now.naive})
+    else:
+        data.update({'create_time': now.naive})
     for k, v in data.items():
-        if k == "id":
+        if k == "id" or v is None:
             continue
         if isinstance(v, list):
             names.append(k)
