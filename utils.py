@@ -105,3 +105,12 @@ def update_sql(table, t_id, **kwargs):
             index += 1
     sets = ",".join(sub)
     return " ".join([up, sets, where]), params
+
+def delete_sql(table, **kwargs):
+    sql, params, index = ["DELETE FROM {} WHERE".format(table)], [], 1
+    for k, v in kwargs.items():
+        sql.append("{} = ${}".format(k, index))
+        params.append(v)
+        index += 1
+    sql.append('RETURNING id')
+    return " ".join(sql), params

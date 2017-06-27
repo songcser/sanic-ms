@@ -4,9 +4,27 @@
 import logging
 
 from asyncpg import connect, create_pool
+from ethicall_common.utils import jsonify
 
 
 logger = logging.getLogger('sanic')
+
+class ConnectionAcquire:
+    def __init__(self, conn):
+        self.conn = conn
+
+    async def __aenter__(self):
+        await self.conn.create_connection()
+        return self
+
+    async def __aexit__(self, *exc):
+        await self.conn.release()
+
+    async def fetch(self, query, *args, timeout=None):
+        return await self.conn.fetch(query, *args, timeout=timeout)
+
+    async def fetchrow(self, query, *args, timeout=None):
+        return dict(await self.conn.fetchrow(query, *args, timeout=timeout))
 
 class BaseConnection(object):
     PGHOST = None
@@ -27,9 +45,8 @@ class BaseConnection(object):
     async def create_connection(self):
         self.cursor = await self._pool.acquire()
         return self
-
     def acquire(self):
-        return self._pool.acquire()
+        return ConnectionAcquire(self)
 
     async def init(self, DB_CONFIG):
         self._pool = await create_pool(**DB_CONFIG, loop=self._loop, max_size=100)
@@ -48,10 +65,10 @@ class BaseConnection(object):
         return await self.cursor.executemmay(command, args, timeout=timeout)
 
     async def fetch(self, query, *args, timeout=None):
-        return await self.cursor.fetch(query, *args, timeout=timeout)
+        return jsonify(await self.cursor.fetch(query, *args, timeout=timeout))
 
     async def fetchrow(self, query, *args, timeout=None):
-        return await self.cursor.fetchrow(query, *args, timeout=timeout)
+        return dict(await self.cursor.fetchrow(query, *args, timeout=timeout))
 
     async def fetchval(self, query, *args, column=0, timeout=None):
         return await self.cursor.fetchval(query, *args, column=column, timeout=timeout)
