@@ -67,16 +67,16 @@ def select_sql(table, values=None, limit=None, offset=None, order_by=None, **kwa
     if sub:
         sql.append("WHERE")
         sql.append(" AND ".join(sub))
+    if order_by:
+        sql.append("ORDER BY {}".format(order_by))
     if limit:
         sql.append("LIMIT ${}".format(index))
         params.append(limit)
         index += 1
-    if offset:
+    if offset is not None:
         sql.append("OFFSET ${}".format(index))
         params.append(offset)
         index += 1
-    sql.append("ORDER BY ${}".format(index))
-    params.append(order_by if order_by else 'id')
     return " ".join(sql), params
 
 def update_sql(table, t_id, **kwargs):
