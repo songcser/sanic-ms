@@ -50,7 +50,7 @@ def insert_sql(table, data):
     sql.append('{}) VALUES ({}) RETURNING id'.format(",".join(names), ",".join(values)))
     return " ".join(sql), params
 
-def select_sql(table, values=None, limit=None, offset=None, **kwargs):
+def select_sql(table, values=None, limit=None, offset=None, order_by=None, **kwargs):
     sql = [""" SELECT {} FROM {}""".format(",".join(values) if values else "*", table)]
     index, params, sub = 1, [], []
     for k, v in kwargs.items():
@@ -74,15 +74,34 @@ def select_sql(table, values=None, limit=None, offset=None, **kwargs):
     if offset:
         sql.append("OFFSET ${}".format(index))
         params.append(offset)
-        index
+        index += 1
+    sql.append("ORDER BY ${}".format(index))
+    params.append(order_by if order_by else 'id')
     return " ".join(sql), params
 
 def update_sql(table, t_id, **kwargs):
-    index, up, sub, where, args =1, "UPDATE {} SET".format(table), [], "WHERE id={}".format(t_id), []
+    index, up, sub, where, params =1, "UPDATE {} SET".format(table), [], "WHERE id={}".format(t_id), []
     for k, v in kwargs.items():
-        if not v or k =='id': continue
-        sub.append("{} = ${}".format(k, index))
-        args.append(v)
-        index += 1
+        if not v or k =='id' or k == 'create_time': continue
+        if isinstance(v, list):
+            ids = []
+            for value in v:
+                if isinstance(value, dict) and 'id' in value:
+                    ids.append(value['id'])
+                else:
+                    ids.append(value)
+            params.append(ids)
+            sub.append("{} = ${}".format(k, index))
+            index += 1
+        elif isinstance(v, dict):
+            id = v['id'] if 'id' in v else None
+            if id:
+                params.append(id)
+                sub.append("{} = ${}".format(k, index))
+                index += 1
+        else:
+            params.append(v)
+            sub.append("{} = ${}".format(k, index))
+            index += 1
     sets = ",".join(sub)
-    return " ".join([up, sets, where]), args
+    return " ".join([up, sets, where]), params

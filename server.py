@@ -29,12 +29,12 @@ async def cros(request):
     if request.method == 'OPTIONS':
         headers = {'Access-Control-Allow-Origin': '*',
                    'Access-Control-Allow-Headers': 'Content-Type',
-                   'Access-Control-Allow-Method': 'POST, PUT, DELETE'}
+                   'Access-Control-Allow-Methods': 'POST, PUT, DELETE'}
         return json({'message': 'Hello World'}, headers=headers)
 
 @app.middleware('response')
 async def cors_res(request, response):
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Method"] = "POST, PUT, DELETE"
+    response.headers["Access-Control-Allow-Methods"] = "POST, PUT, DELETE"
 
