@@ -41,6 +41,8 @@ async def cros(request):
 
 @app.middleware('response')
 async def cors_res(request, response):
+    if not response:
+        return response
     result = {'status': True}
     if not isinstance(response, HTTPResponse):
         if isinstance(response, tuple) and len(response) == 2:
