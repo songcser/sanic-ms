@@ -10,7 +10,7 @@ from sanic_openapi import swagger_blueprint, openapi_blueprint
 from asyncpg import Record
 
 from config import DB_CONFIG
-from ethicall_common.db import BaseConnection
+from ethicall_common.db import ConnectionPool
 from ethicall_common.client import Client
 from ethicall_common.utils import jsonify
 
@@ -28,7 +28,7 @@ def extra_type_serializer(obj):
 
 @app.listener('before_server_start')
 async def before_srver_start(app, loop):
-    app.db = await BaseConnection(loop=loop).init(DB_CONFIG=DB_CONFIG)
+    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG=DB_CONFIG)
 
 
 @app.middleware('request')
@@ -41,7 +41,7 @@ async def cros(request):
 
 @app.middleware('response')
 async def cors_res(request, response):
-    if not response:
+    if response is None:
         return response
     result = {'status': True}
     if not isinstance(response, HTTPResponse):
