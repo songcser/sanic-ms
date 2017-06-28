@@ -6,6 +6,8 @@ import arrow
 
 logger = logging.getLogger('sanic')
 
+PAGE_COUNT = 20
+
 def jsonify(records):
     """
     Parse asyncpg record response into JSON format
@@ -78,6 +80,27 @@ def select_sql(table, values=None, limit=None, offset=None, order_by=None, **kwa
         params.append(offset)
         index += 1
     return " ".join(sql), params
+
+def select_count_sql(table, **kwargs):
+    sql, index, params, sub = [""" SELECT count(id) FROM {}""".format(table)], 1, [], []
+    for k, v in kwargs.items():
+        if v is None: continue
+        if v == 'NULL':
+            sub.append("{} is NULL".format(k))
+        elif isinstance(v, list):
+            sub.append("{} in ({})".format(k, ",".join(v)))
+        else:
+            sub.append("{} = ${}".format(k, index))
+            params.append(v)
+            index += 1
+    sql.append("WHERE")
+    if sub:
+        sql.append(" AND ".join(sub))
+    else:
+        sql.append("1=${}".format(index))
+        params.append(1)
+    return " ".join(sql), params
+
 
 def update_sql(table, t_id, **kwargs):
     index, up, sub, where, params =1, "UPDATE {} SET".format(table), [], "WHERE id={}".format(t_id), []
