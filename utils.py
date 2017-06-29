@@ -137,3 +137,8 @@ def delete_sql(table, **kwargs):
         index += 1
     sql.append('RETURNING id')
     return " ".join(sql), params
+
+async def get_pagination(cur, table, page, limit, **kwargs):
+    sql, params = select_count_sql(table, **kwargs)
+    res = await cur.fetchrow(sql, *params)
+    return {'total': res['count'], 'page': page, 'limit': limit}
