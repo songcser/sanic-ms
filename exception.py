@@ -3,7 +3,7 @@
 
 
 
-class BaseException(Exception):
+class CustomException(Exception):
     status_code = None
     code = 100001
     message = None
@@ -18,54 +18,54 @@ class BaseException(Exception):
             self.status_code = status_code
         self.error = error
 
-class BadRequest(BaseException):
+class BadRequest(CustomException):
     status_code = 400
     message = "Bad Request"
 
-class Unauthorized(BaseException):
+class Unauthorized(CustomException):
     status_code = 401
     message = "Unauthorized"
 
-class Forbidden(BaseException):
+class Forbidden(CustomException):
     status_code = 403
     message = "Not Found"
 
-class NotFound(BaseException):
+class NotFound(CustomException):
     status_code = 404
     message = "Not Found"
 
-class NotAcceptable(BaseException):
+class NotAcceptable(CustomException):
     status_code = 406
     message = "Unauthorized"
 
-class Gone(BaseException):
+class Gone(CustomException):
     status_code = 410
     message = "Unauthorized"
 
-class Enhance(BaseException):
+class Enhance(CustomException):
     status_code = 420
     message = "Enhance Your Calm"
 
-class UnprocessableEntity(BaseException):
+class UnprocessableEntity(CustomException):
     status_code = 422
     message = "Unprocessable Entity"
 
-class TooManyRequests(BaseException):
+class TooManyRequests(CustomException):
     status_code = 429
     message = "Too Many Requests"
 
-class ServerError(BaseException):
+class ServerError(CustomException):
     status_code = 500
     message = "Internal Server Error"
 
-class BadGateway(BaseException):
+class BadGateway(CustomException):
     status_code = 502
     message = "Bad Gateway"
 
-class ServiceUnavailable(BaseException):
+class ServiceUnavailable(CustomException):
     status_code = 503
     message = "Service Unavailable"
 
-class GatewayTimeout(BaseException):
+class GatewayTimeout(CustomException):
     status_code = 504
     message = "Gatewa timeout"
