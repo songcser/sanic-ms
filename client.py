@@ -6,9 +6,10 @@ from aiohttp import ClientSession
 class Client:
     _client = None
 
-    def __init__(self, loop, url=None):
-        self._client = ClientSession(loop=loop)
+    def __init__(self, loop, url=None, **kwargs):
+        self._client = ClientSession(loop=loop, **kwargs)
         self._url = url
+        self._loop = loop
 
     @property
     def cli(self):
