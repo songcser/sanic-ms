@@ -23,7 +23,7 @@ STANDARD_ANNOTATIONS = {
 }
 STANDARD_ANNOTATIONS_KEYS = frozenset(STANDARD_ANNOTATIONS.keys())
 
-#_logger = logging.getLogger('sanic')
+_log = logging.getLogger('sanic')
 _logger = logging.getLogger('zipkin')
 
 def _default_json_default(obj):
@@ -146,7 +146,7 @@ def logger(type=None, category=None, detail=None, description=None,
                     'start_time': start_time,
                 })
             log.update({
-                "args": ",".join(args) if isinstance(args, list) else str(args),
+                "args": ",".join([str(a) for a in args]) if isinstance(args, (list, tuple)) else str(args),
                 "kwargs": kwargs.copy() if kwargs else {},
             })
             try:

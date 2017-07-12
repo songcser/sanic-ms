@@ -144,7 +144,6 @@ async def consume(q):
         while True:
             # wait for an item from the producer
             span = await q.get()
-            logger.info('consuming {}...'.format(span))
             annotations = []
             binary_annotations = []
             annotation_filter = set()
@@ -189,7 +188,6 @@ async def consume(q):
                 annotations,
                 binary_annotations,
             )
-            logger.info(span_record)
             async with session.post('http://192.168.2.20:9411/api/v1/spans',
                                     json=[span_record]) as res:
                 logger.info(await res.text())

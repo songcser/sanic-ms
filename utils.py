@@ -3,6 +3,7 @@
 
 import logging
 import arrow
+import asyncio
 
 logger = logging.getLogger('sanic')
 
@@ -149,6 +150,8 @@ def id_to_hex(id):
     return '{0:x}'.format(id)
 
 
-async def async_request(request, **kwargs):
-    for k, v in kwargs.items():
-        pass
+async def async_request(calls):
+    results = await asyncio.gather(*[ call[2] for call in calls])
+    for index, obj in enumerate(results):
+        call = calls[index]
+        call[0][call[1]] = results[index]
