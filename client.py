@@ -10,15 +10,14 @@ logger = logging.getLogger('sanic')
 
 class Client:
 
-    def __init__(self, loop=None, url=None, reporter=None, **kwargs):
+    def __init__(self, loop=None, url=None, **kwargs):
         self._client = ClientSession(loop=loop, **kwargs)
         self._url = url
-        self._reporter = reporter
 
     def cli(self, req):
         span = opentracing.tracer.start_span(operation_name='get', child_of=req['span'])
         return ClientConn(self._client, url=self._url, span=span,
-                      reporter=self._reporter)
+                      reporter=req.app.reporter)
 
     def close(self):
         self._client.close()
