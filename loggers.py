@@ -1,4 +1,30 @@
+import os
+import sys
+import logging
+import redis
+import opentracing
+import datetime
+import aiohttp
+import time
+import json
+import traceback as tb
+import functools
 
+
+from sanic.request import Request
+from basictracer.recorder import SpanRecorder
+from config import ENV_NAME
+
+from . import utils
+
+STANDARD_ANNOTATIONS = {
+    'client': {'cs':[], 'cr':[]},
+    'server': {'ss':[], 'sr':[]},
+}
+STANDARD_ANNOTATIONS_KEYS = frozenset(STANDARD_ANNOTATIONS.keys())
+
+#_logger = logging.getLogger('sanic')
+_logger = logging.getLogger('zipkin')
 
 def _default_json_default(obj):
     """
@@ -10,43 +36,22 @@ def _default_json_default(obj):
     else:
         return str(obj)
 
+class RedisHandler(logging.Handler):
+    def __init__(self, host, port, key):
+        logging.Handler.__init__(self)
+        self.redis = redis.Redis(host=host, port=port)
+        self.key = key
 
-class ConsoleFormatter(logging.Formatter):
+    def emit(self, record):
+        data = self.format(record)
+        self.redis.rpush(self.key, data)
 
-    def format(self, record):
-        args = record.args
-        a = []
-        for arg in args:
-            if isinstance(arg, Request):
-                continue
-            a.append(arg)
-        record.args = a
-        s = super(ConsoleFormatter, self).format(record)
-        return s
-
-
-class LogstashFormatter(logging.Formatter):
-    """
-    A custom formatter to prepare logs to be
-    shipped out to logstash.
-    """
+class JsonFormatter(logging.Formatter):
 
     def __init__(self,
                  fmt=None,
-                 datefmt=None,
                  json_cls=None,
                  json_default=_default_json_default):
-        """
-        :param fmt: Config as a JSON string, allowed fields;
-               extra: provide extra fields always present in logs
-               source_host: override source host name
-        :param datefmt: Date format to use (required by logging.Formatter
-            interface but not used)
-        :param json_cls: JSON encoder to forward to json.dumps
-        :param json_default: Default JSON representation for unknown types,
-                             by default coerce everything to a string
-        """
-
         if fmt is not None:
             self._fmt = json.loads(fmt)
         else:
@@ -54,171 +59,158 @@ class LogstashFormatter(logging.Formatter):
 
         self.json_default = json_default
         self.json_cls = json_cls
-        if 'extra' not in self._fmt:
-            self.defaults = {}
-        else:
-            self.defaults = self._fmt['extra']
-        if 'source_host' in self._fmt:
-            self.source_host = self._fmt['source_host']
-        else:
-            try:
-                self.source_host = socket.gethostname()
-            except:
-                self.source_host = ""
+        self.defaults = {}
+        try:
+            self.defaults['hostname'] = socket.gethostname()
+        except:
+            pass
 
     def format(self, record):
-        """
-        Format a log record to JSON, if the message is a dict
-        assume an empty message and use the dict as additional
-        fields.
-        """
-
         fields = record.__dict__.copy()
+        if 'args' in fields:
+            data = fields.pop('args')
+        else:
+            data = fields
 
-        if 'msg' in fields and 'message' not in fields:
-            msg = fields.pop('msg')
-            try:
-                msg = msg.format(**fields)
-            except KeyError:
-                pass
-            fields['message'] = msg
+        msg = fields.pop('msg')
+        if 'message' not in data:
+            data['message'] = msg
+        exc_type, exc_value, exc_traceback = sys.exc_info()
+        if 'exc_text' in fields and fields['exc_text']:
+            exception = fields.pop('exc_text')
+            data.update({
+                'exception':  exception,
+            })
+        elif exc_type and exc_value and exc_traceback:
+            formatted = tb.format_exception(exc_type, exc_value, exc_traceback)
+            data.update({
+                'exception': formatted,
+            })
 
-        if 'exc_info' in fields:
-            if fields['exc_info']:
-                formatted = tb.format_exception(*fields['exc_info'])
-                fields['exception'] = formatted
-            fields.pop('exc_info')
+        name = 'zipkin'
+        env_name = ENV_NAME
+        data.update({
+            'index': "%s-%s" % (env_name, name) if env_name else name,
+            'document_type': fields['name'],
+            'type': 'er_base_logger',
 
-        if 'exc_text' in fields and not fields['exc_text']:
-            fields.pop('exc_text')
-
-        for arg in fields["args"]:
-            if isinstance(arg, Request):
-                request = arg
-                # fields["request_header"] = request.headers
-                fields["request_base_url"] = request.base_url
-                fields["request_method"] = request.method
-                fields["request_args"] = request.args
-                fields["clientip"] = request.remote_addr
-                # fields["request_data"] = request.json if request.data else {}
-                fields["token"] = request.headers["Soundlife-Token"] if "Soundlife-Token" in request.headers else ''
-                fields["device"] = request.headers["Soundlife-Device"] if "Soundlife-Device" in request.headers else ''
-
-        now = datetime.datetime.utcnow()
-        base_log = {'@timestamp': now.strftime("%Y-%m-%dT%H:%M:%S") +
-                    ".%03d" % (now.microsecond / 1000) + "Z",
-                    '@version': 1}
-        base_log.update(fields)
-
+            '@version': 1,
+        })
+        if '@timestamp' not in data:
+            now = datetime.datetime.utcnow()
+            timestamp = now.strftime("%Y-%m-%dT%H:%M:%S") + ".%03d" % (now.microsecond / 1000) + "Z"
+            data.update({
+               '@timestamp': timestamp
+            })
         logr = self.defaults.copy()
-        logr.update(base_log)
-
+        logr.update(data)
         return json.dumps(logr, default=self.json_default, cls=self.json_cls, ensure_ascii=False)
 
     def _build_fields(self, defaults, fields):
         """Return provided fields including any in defaults
-
-        >>> f = LogstashFormatter()
-        # Verify that ``fields`` is used
-        >>> f._build_fields({}, {'foo': 'one'}) == \
-                {'foo': 'one'}
-        True
-        # Verify that ``@fields`` in ``defaults`` is used
-        >>> f._build_fields({'@fields': {'bar': 'two'}}, {'foo': 'one'}) == \
-                {'foo': 'one', 'bar': 'two'}
-        True
-        # Verify that ``fields`` takes precedence
-        >>> f._build_fields({'@fields': {'foo': 'two'}}, {'foo': 'one'}) == \
-                {'foo': 'one'}
-        True
         """
         return dict(list(defaults.get('@fields', {}).items()) + list(fields.items()))
 
+def gen_span(request, name):
+    span = opentracing.tracer.start_span(operation_name=name,
+                             child_of=request['span'])
+    span.log_kv({'event': 'server'})
+    return span
 
-class DeployFilter(logging.Filter):
+def logger(type=None, category=None, detail=None, description=None,
+           tracing=True, level=logging.INFO, *args, **kwargs):
+    def decorator(fn=None):
+        @functools.wraps(fn)
+        async def _decorator(*args, **kwargs):
+            request = args[0] if len(args) > 0 and isinstance(args[0], Request) else None
+            log = {
+                'category': category or request.app.name if request else '',  #服务名
+                'fun_name': fn.__name__,
+                'detail': detail or fn.__name__,  # 方法名或定义URL列表
+                'log_type': type or 'method',
+                'description': description or fn.__doc__ if fn.__doc__ else '',
+            }
+            span = None
+            if request and tracing:
+                oldspan = request['span']
+                span = gen_span(request, fn.__name__)
+                span.tags.update(log)
+                request['span'] = span
+                log.update({
+                    'start_time': span.start_time,
+                    'trace_id': span.context.trace_id
+                })
+            else:
+                start_time = time.time()
+                log.update({
+                    'start_time': start_time,
+                })
+            log.update({
+                "args": ",".join(args) if isinstance(args, list) else str(args),
+                "kwargs": kwargs.copy() if kwargs else {},
+            })
+            try:
+                exce = False
+                res = await fn(*args, **kwargs)
+                return res
+            except Exception as e:
+                exce = True
+                raise e
+            finally:
+                if request and tracing:
+                    await request.app.reporter.finish(
+                        "{}-{}".format( request.app.name, log['log_type']),
+                        span)
+                    log.update({
+                        'duration': span.duration,
+                        'end_time': span.start_time + span.duration
+                    })
+                    request['span'] = oldspan
+                else:
+                    end_time = time.time()
+                    log.update({
+                        'end_time': end_time,
+                        'duration': end_time - start_time
+                    })
+                if exce:
+                    _logger.exception('{} has error'.format(fn.__name__), log)
+                else:
+                    _logger.info('{} is success'.format(fn.__name__), log)
 
-    def filter(self, record):
-        deploy = os.environ.get("CONSOLELOG", None)
-        if deploy and deploy == "no":
-            return False
-        else:
-            return True
+        _decorator.detail = detail
+        _decorator.description = description
+        _decorator.level = level
+        return _decorator
+    decorator.detail = detail
+    decorator.description = description
+    decorator.level = level
+    return decorator
 
+class AioReporter(SpanRecorder):
+    def __init__(self, service_name=None, queue=None):
+        self.service_name = service_name
+        self.annotation_filter = set()
+        self.cli = None
+        self.queue = queue
 
-default_logging_config = {
-    'version': 1,
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
-        },
-        'simple': {
-            'format': '%(levelname)s %(message)s'
-        },
-        'json': {
-            'format': ''
-        },
-        'logstash': {
-            'format': '{}',
-            '()': LogstashFormatter,
-        },
-        'console': {
-            '()': ConsoleFormatter
+    def create_span(self, span_id, parent_span_id, trace_id, span_name,
+                    start_time, duration, annotations,
+                    binary_annotations):
+        span_dict = {
+            'traceId': trace_id,
+            'name': span_name,
+            'id': span_id,
+            'timestamp': start_time,
+            'duration': duration,
+            'annotations': annotations,
+            'binary_annotations': binary_annotations
         }
-    },
-    'filters': {
-        "deployFilter": {
-            '()': DeployFilter,
-        }
-    },
-    'handlers': {
-        'null': {
-            'level': 'DEBUG',
-            'class': 'logging.NullHandler',
-        },
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-            'formatter': 'console',
-            'filters': ['deployFilter']
-        },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'verbose',
-            'filename': os.path.join(LOGPATH, 'logs/file.log'),
-            'maxBytes': 1024000,
-            'backupCount': 10,
-        },
-        'sql': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'verbose',
-            'filename': os.path.join(LOGPATH, 'logs/sql.log'),
-            'maxBytes': 1024000,
-            'backupCount': 10,
-        },
-        'logstash': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'logstash',
-            'filename': os.path.join(LOGPATH, 'logs/info.log'),
-            'maxBytes': 1024000,
-            'backupCount': 10,
-        },
-        'app': {
-            'level': 'INFO',
-            'class': 'logging.handlers.RotatingFileHandler',
-            'formatter': 'logstash',
-            'filename': os.path.join(LOGPATH, 'logs/app_info.log'),
-            'maxBytes': 1024000,
-            'backupCount': 10,
-        }
-    },
-    'loggers': {
-        'root': {
-            'handlers': ['console'],
-            'propagate': True,
-            'level': 'INFO',
-        },
-    }
-}
+        return span_dict
+
+    def record_span(self, span):
+        pass
+
+    async def finish(self, service_name, span):
+        span.set_tag('component', service_name)
+        span.finish()
+        await self.queue.put(span)

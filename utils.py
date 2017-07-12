@@ -60,7 +60,6 @@ def select_sql(table, values=None, limit=None, offset=None, order_by=None, **kwa
         if v == 'NULL':
             sub.append("{} is NULL".format(k))
         elif isinstance(v, list):
-            logger.info(v)
             sub.append("{} in ({})".format(k, ",".join(v)))
         else:
             sub.append("{} = ${}".format(k, index))
@@ -142,3 +141,14 @@ async def get_pagination(cur, table, page, limit, **kwargs):
     sql, params = select_count_sql(table, **kwargs)
     res = await cur.fetchrow(sql, *params)
     return {'total': res['count'], 'page': page, 'limit': limit}
+
+
+def id_to_hex(id):
+    if id is None:
+        return None
+    return '{0:x}'.format(id)
+
+
+async def async_request(request, **kwargs):
+    for k, v in kwargs.items():
+        pass

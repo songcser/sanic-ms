@@ -1,0 +1,38 @@
+version: 1
+disable_existing_logers: False
+formatters:
+    verbose:
+        format: '%(asctime)s %(process)d %(levelname)s %(name)s %(thread)d %(message)s'
+    simple:
+        format: '%(levelname)s %(message)s'
+    json:
+        (): ethicall_common.loggers.JsonFormatter
+handlers:
+    console:
+        level: INFO
+        class: logging.StreamHandler
+        formatter: verbose
+    json:
+        level: INFO
+        class: logging.StreamHandler
+        formatter: json
+    redis:
+        (): ethicall_common.loggers.RedisHandler
+        level: INFO
+        formatter: json
+        host: 192.168.2.20
+        port: 6379
+        key: 'er_base_logger_common'
+loggers:
+    root:
+        handlers: [console]
+        propagate: False
+        level: INFO
+    sanic:
+        handlers: [console]
+        propagate: False
+        level: INFO
+    zipkin:
+        handlers: [json, redis]
+        propagate: False
+        level: INFO

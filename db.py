@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
+import opentracing
 
 from asyncpg import connect, create_pool
 from ethicall_common.utils import jsonify
@@ -10,13 +11,23 @@ from ethicall_common.utils import jsonify
 logger = logging.getLogger('sanic')
 
 class BaseConnection(object):
-    def __init__(self, pool):
+    def __init__(self, pool, reporter=None, span=None):
         self._pool = pool
+        self._reporter = reporter
+        self._span = span
         self.conn = None
 
     @property
     def rowcount(self):
         return self.conn.rowcount
+
+    def before(self, name, query, *args):
+        span = opentracing.tracer.start_span(operation_name=name, child_of=self._span)
+        span.log_kv({ 'event': 'client'})
+        span.set_tag('db.type', 'sql')
+        span.set_tag('db.sql', query)
+        span.set_tag('args', ','.join([str(a) for a in args]))
+        return span
 
     async def add_listener(self, channel, callback):
         await self.conn.add_listener(channel, callback)
@@ -25,28 +36,50 @@ class BaseConnection(object):
         await self.conn.remove_listener(channel, callback)
 
     async def execute(self, query:str, *args, timeout:float=None):
-        return await self.conn.execute(query, *args, timeout=timeout)
+        span = self.before('execute', query, *args)
+        res = await self.conn.execute(query, *args, timeout=timeout)
+        await self._reporter.finish('db-execute', span)
+        return res
 
     async def executemany(self, command:str, args, timeout:float=None):
-        return await self.conn.executemmay(command, args, timeout=timeout)
+        span = self.before('executemany', command, args)
+        res = await self.conn.executemmay(command, args, timeout=timeout)
+        await self._reporter.finish('db-execute', span)
+        return res
 
     async def fetch(self, query, *args, timeout=None):
-        return jsonify(await self.conn.fetch(query, *args, timeout=timeout))
+        span = self.before('fetch', query, *args)
+        res = jsonify(await self.conn.fetch(query, *args, timeout=timeout))
+        await self._reporter.finish('db-execute', span)
+        return res
 
     async def fetchrow(self, query, *args, timeout=None):
-        return dict(await self.conn.fetchrow(query, *args, timeout=timeout))
+        span = self.before('fetchrow', query, *args)
+        res = dict(await self.conn.fetchrow(query, *args, timeout=timeout))
+        await self._reporter.finish('db-execute', span)
+        return res
 
     async def fetchval(self, query, *args, column=0, timeout=None):
-        return await self.conn.fetchval(query, *args, column=column, timeout=timeout)
+        span = self.before('fetchval', query, *args)
+        res = await self.conn.fetchval(query, *args, column=column, timeout=timeout)
+        await self._reporter.finish('db-execute', span)
+        return res
 
     async def prepare(self, query, *args, timeout=None):
-        return await self.conn.prepare(query, *args, timeout=None)
+        span = self.before('prepare', query, *args)
+        res = await self.conn.prepare(query, *args, timeout=None)
+        await self._reporter.finish('db-execute', span)
+        return res
 
     async def set_builtin_type_codec(self, typename, *args, schema='public', codec_name):
+        span = self.before('set_builtin_type_codec', typename, *args)
         await self.conn.set_builtin_type_codec(typename, *args, schema=schema, codec_name=codec_name)
+        await self._reporter.finish('db-execute', span)
 
     async def set_type_codec(self, typename, *args, schema='public', encoder, decoder, binary=False):
+        span = self.before('set_type_codec', typename, *args)
         await self.conn.set_type_codec(typename, *args, schema=schema, encoder=encoder, decoder=decoder, binary=binary)
+        await self._reporter.finish('db-execute', span)
 
     def transaction(self, *args, isolation='read_committed', readonly=False, deferrable=False):
         return self.conn.transaction(*args, isolation=isolation, readonly=readonly, deferrable=deferrable)
@@ -93,17 +126,18 @@ class ConnectionPool(object):
     PGDATABASE = None
     pool = None
 
-    def __init__(self, loop=None):
+    def __init__(self, loop=None, reporter=None):
         self.conn = None
         self._loop = loop
+        self._reporter =reporter
         self._pool = None
 
     async def init(self, DB_CONFIG):
         self._pool = await create_pool(**DB_CONFIG, loop=self._loop, max_size=100)
         return self
 
-    def acquire(self):
-        return BaseConnection(self._pool)
+    def acquire(self, request=None):
+        return BaseConnection(self._pool, reporter=self._reporter, span=request['span'] if request else None)
 
-    def transaction(self):
-        return TransactionConnection(self._pool)
+    def transaction(self, request=None):
+        return TransactionConnection(self._pool, reporter=self._reporter, span=request['span'] if request else None)
