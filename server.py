@@ -145,13 +145,11 @@ async def consume(q):
             # wait for an item from the producer
             try:
                 span = await q.get()
-                logger.info('consuming {}...'.format(span))
                 annotations = []
                 binary_annotations = []
                 annotation_filter = set()
-                service_name = span.tags.get('component', 'visit-service')
-                endpoint = {'serviceName': service_name, 'ipv4': "192.168.2.81",
-                            'port': 9000}
+                service_name = span.tags.pop('component')
+                endpoint = {'serviceName': service_name if service_name else 'service'}
                 if span.tags:
                     for k, v in span.tags.items():
                         binary_annotations.append({
@@ -179,7 +177,6 @@ async def consume(q):
                             'timestamp': v,
                             'value': k
                         })
-
                 span_record = create_span(
                     utils.id_to_hex(span.context.span_id),
                     utils.id_to_hex(span.parent_id),
@@ -190,7 +187,6 @@ async def consume(q):
                     annotations,
                     binary_annotations,
                 )
-                logger.info(span_record)
                 async with session.post('http://192.168.2.20:9411/api/v1/spans',
                                         json=[span_record]) as res:
                     logger.info(await res.text())
