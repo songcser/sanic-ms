@@ -143,58 +143,59 @@ async def consume(q):
     async with aiohttp.ClientSession() as session:
         while True:
             # wait for an item from the producer
-            span = await q.get()
-            logger.info('consuming {}...'.format(span))
-            annotations = []
-            binary_annotations = []
-            annotation_filter = set()
-            service_name = span.tags.get('component', 'visit-service')
-            endpoint = {'serviceName': service_name, 'ipv4': "192.168.2.81",
-                        'port': 9000}
-            if span.tags:
-                for k, v in span.tags.items():
-                    binary_annotations.append({
-                        'endpoint': endpoint,
-                        'key': k,
-                        'value': v
-                    })
-            for log in span.logs:
-                event = log.key_values.get('event') or ''
-                payload = log.key_values.get('payload')
-                an = []
-                start_time = int(span.start_time*1000000)
-                duration = int(span.duration*1000000)
-                if event == 'client':
-                    an = {'cs': start_time,
-                        'cr': start_time + duration}
-                elif event == 'server':
-                    an = {'sr': start_time,
-                        'ss': start_time + duration}
-                else:
-                    binary_annotations["%s@%s" % (event, str(log.timestamp))] = payload
-                for k, v in an.items():
-                    annotations.append({
-                        'endpoint': endpoint,
-                        'timestamp': v,
-                        'value': k
-                    })
+            try:
+                span = await q.get()
+                logger.info('consuming {}...'.format(span))
+                annotations = []
+                binary_annotations = []
+                annotation_filter = set()
+                service_name = span.tags.get('component', 'visit-service')
+                endpoint = {'serviceName': service_name, 'ipv4': "192.168.2.81",
+                            'port': 9000}
+                if span.tags:
+                    for k, v in span.tags.items():
+                        binary_annotations.append({
+                            'endpoint': endpoint,
+                            'key': k,
+                            'value': v
+                        })
+                for log in span.logs:
+                    event = log.key_values.get('event') or ''
+                    payload = log.key_values.get('payload')
+                    an = []
+                    start_time = int(span.start_time*1000000)
+                    duration = int(span.duration*1000000)
+                    if event == 'client':
+                        an = {'cs': start_time,
+                            'cr': start_time + duration}
+                    elif event == 'server':
+                        an = {'sr': start_time,
+                            'ss': start_time + duration}
+                    else:
+                        binary_annotations["%s@%s" % (event, str(log.timestamp))] = payload
+                    for k, v in an.items():
+                        annotations.append({
+                            'endpoint': endpoint,
+                            'timestamp': v,
+                            'value': k
+                        })
 
-            span_record = create_span(
-                utils.id_to_hex(span.context.span_id),
-                utils.id_to_hex(span.parent_id),
-                utils.id_to_hex(span.context.trace_id),
-                span.operation_name,
-                start_time,
-                duration,
-                annotations,
-                binary_annotations,
-            )
-            logger.info(span_record)
-            async with session.post('http://192.168.2.20:9411/api/v1/spans',
-                                    json=[span_record]) as res:
-                logger.info(await res.text())
-            # process the item
-            # simulate i/o operation using sleep
-            # await asyncio.sleep(random.random())
-            # Notify the queue that the item has been processed
-            q.task_done()
+                span_record = create_span(
+                    utils.id_to_hex(span.context.span_id),
+                    utils.id_to_hex(span.parent_id),
+                    utils.id_to_hex(span.context.trace_id),
+                    span.operation_name,
+                    start_time,
+                    duration,
+                    annotations,
+                    binary_annotations,
+                )
+                logger.info(span_record)
+                async with session.post('http://192.168.2.20:9411/api/v1/spans',
+                                        json=[span_record]) as res:
+                    logger.info(await res.text())
+            except Exception as e:
+                logger.error(e)
+                raise e
+            finally:
+                q.task_done()
