@@ -16,7 +16,7 @@ from basictracer import BasicTracer
 from sanic import Sanic
 from sanic.handlers import ErrorHandler
 from sanic.response import json, text, HTTPResponse
-from sanic_openapi import swagger_blueprint, openapi_blueprint
+from sanic.exceptions import RequestTimeout
 from aiohttp import ClientSession
 
 from config import DB_CONFIG
@@ -25,6 +25,8 @@ from ethicall_common.client import Client
 from ethicall_common.utils import jsonify
 from ethicall_common.exception import CustomException
 from ethicall_common.loggers import AioReporter
+from ethicall_common.openapi import blueprint as openapi_blueprint
+#from ethicall_common.swagger import blueprint as swagger_blueprint
 from . import utils
 
 with open('ethicall_common/logging.yml') as f:
@@ -35,7 +37,7 @@ logger = logging.getLogger('sanic')
 app = Sanic(__name__)
 
 app.blueprint(openapi_blueprint)
-app.blueprint(swagger_blueprint)
+#app.blueprint(swagger_blueprint)
 
 class CustomHandler(ErrorHandler):
 
@@ -65,7 +67,7 @@ def extra_type_serializer(obj):
 async def before_srver_start(app, loop):
     queue = asyncio.Queue()
     app.queue = queue
-    loop.create_task(consume(queue))
+    loop.create_task(consume(queue, app.config.ZIPKIN_SERVER))
     reporter = AioReporter(app.name, queue=queue)
     app.reporter = reporter
     tracer = BasicTracer(recorder=reporter)
@@ -124,6 +126,10 @@ async def cors_res(request, response):
     await request.app.reporter.finish(request.app.name, span)
     return response
 
+@app.exception(RequestTimeout)
+def timeout(request, exception):
+    return json({'message': 'Request Timeout'}, 408)
+
 def create_span(span_id, parent_span_id, trace_id, span_name,
                 start_time, duration, annotations,
                 binary_annotations):
@@ -139,7 +145,7 @@ def create_span(span_id, parent_span_id, trace_id, span_name,
     }
     return span_dict
 
-async def consume(q):
+async def consume(q, zs):
     async with aiohttp.ClientSession() as session:
         while True:
             # wait for an item from the producer
@@ -148,7 +154,7 @@ async def consume(q):
                 annotations = []
                 binary_annotations = []
                 annotation_filter = set()
-                service_name = span.tags.pop('component')
+                service_name = span.tags.pop('component') if 'component' in span.tags else None
                 endpoint = {'serviceName': service_name if service_name else 'service'}
                 if span.tags:
                     for k, v in span.tags.items():
@@ -187,11 +193,10 @@ async def consume(q):
                     annotations,
                     binary_annotations,
                 )
-                async with session.post('http://192.168.2.20:9411/api/v1/spans',
-                                        json=[span_record]) as res:
+                async with session.post(zs, json=[span_record]) as res:
                     logger.info(await res.text())
             except Exception as e:
-                logger.error(e)
+                logger.error("dddddddddd {}".format(e))
                 raise e
             finally:
                 q.task_done()

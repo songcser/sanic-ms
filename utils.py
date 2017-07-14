@@ -155,3 +155,7 @@ async def async_request(calls):
     for index, obj in enumerate(results):
         call = calls[index]
         call[0][call[1]] = results[index]
+
+async def async_execute(*calls):
+    results = await asyncio.gather(*calls)
+    return tuple(results)
