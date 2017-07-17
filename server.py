@@ -16,7 +16,7 @@ from basictracer import BasicTracer
 from sanic import Sanic
 from sanic.handlers import ErrorHandler
 from sanic.response import json, text, HTTPResponse
-from sanic.exceptions import RequestTimeout
+from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
 from config import DB_CONFIG
@@ -35,6 +35,7 @@ with open('ethicall_common/logging.yml') as f:
 logger = logging.getLogger('sanic')
 # make app
 app = Sanic(__name__)
+app.config.ZIPKIN_SERVER = ""
 
 app.blueprint(openapi_blueprint)
 #app.blueprint(swagger_blueprint)
@@ -106,7 +107,7 @@ async def cros(request):
 
 @app.middleware('response')
 async def cors_res(request, response):
-    span = request['span']
+    span = request['span'] if 'span' in request else None
     if response is None:
         return response
     result = {'status': True}
@@ -119,16 +120,20 @@ async def cors_res(request, response):
         else:
             result.update({'data': response})
         response = json(result)
-        span.set_tag('http.status_code', "200")
+        if span: span.set_tag('http.status_code', "200")
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     response.headers["Access-Control-Allow-Methods"] = "POST, PUT, DELETE"
-    await request.app.reporter.finish(request.app.name, span)
+    if span: await request.app.reporter.finish(request.app.name, span)
     return response
 
 @app.exception(RequestTimeout)
 def timeout(request, exception):
     return json({'message': 'Request Timeout'}, 408)
+
+@app.exception(NotFound)
+def notfound(request, exception):
+    return json({'message': 'Requested URL {} not found'.format(request.url)}, 404)
 
 def create_span(span_id, parent_span_id, trace_id, span_name,
                 start_time, duration, annotations,
