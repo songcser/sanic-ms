@@ -39,7 +39,7 @@ def info(version=None, author=None, datetime=None):
             if mr: return None
             MigrationRecord.create(
                 table=table, version=version, author=author if author else '',
-                datetime=datetime if datetime else arrow.utcnow().datetime)
+                datetime=datetime if datetime else arrow.utcnow().naive)
             fn(*args, **kwargs)
         _decorator.version = version
         _decorator.author = author

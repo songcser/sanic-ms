@@ -132,10 +132,10 @@ def logger(type=None, category=None, detail=None, description=None,
             }
             span = None
             if request and tracing:
-                oldspan = request['span']
+                #oldspan = request['span']
                 span = gen_span(request, fn.__name__)
                 span.tags.update(log)
-                request['span'] = span
+                #request['span'] = span
                 log.update({
                     'start_time': span.start_time,
                     'trace_id': span.context.trace_id
@@ -152,30 +152,33 @@ def logger(type=None, category=None, detail=None, description=None,
             try:
                 exce = False
                 res = await fn(*args, **kwargs)
+                #request['span'] = oldspan
                 return res
             except Exception as e:
                 exce = True
                 raise e
             finally:
-                if request and tracing:
-                    await request.app.reporter.finish(
-                        "{}-{}".format( request.app.name, log['log_type']),
-                        span)
-                    log.update({
-                        'duration': span.duration,
-                        'end_time': span.start_time + span.duration
-                    })
-                    request['span'] = oldspan
-                else:
-                    end_time = time.time()
-                    log.update({
-                        'end_time': end_time,
-                        'duration': end_time - start_time
-                    })
-                if exce:
-                    _logger.exception('{} has error'.format(fn.__name__), log)
-                else:
-                    _logger.info('{} is success'.format(fn.__name__), log)
+                try:
+                    if request and tracing:
+                        await request.app.reporter.finish(
+                            "{}-{}".format( request.app.name, log['log_type']),
+                            span)
+                        log.update({
+                            'duration': span.duration,
+                            'end_time': span.start_time + span.duration
+                        })
+                    else:
+                        end_time = time.time()
+                        log.update({
+                            'end_time': end_time,
+                            'duration': end_time - start_time
+                        })
+                    if exce:
+                        _logger.exception('{} has error'.format(fn.__name__), log)
+                    else:
+                        _logger.info('{} is success'.format(fn.__name__), log)
+                except Exception as e:
+                    _log.info("dddddddddddddddddddddd")
 
         _decorator.detail = detail
         _decorator.description = description

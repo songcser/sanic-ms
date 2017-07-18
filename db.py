@@ -98,8 +98,8 @@ class BaseConnection(object):
         await self.release()
 
 class TransactionConnection(BaseConnection):
-    def __init__(self, pool):
-        super(TransactionConnection, self).__init__(pool)
+    def __init__(self, pool, reporter=None, span=None):
+        super(TransactionConnection, self).__init__(pool, reporter, span)
 
     async def __aenter__(self):
         self.conn = await self._pool.acquire()
