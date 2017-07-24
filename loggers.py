@@ -160,9 +160,9 @@ def logger(type=None, category=None, detail=None, description=None,
             finally:
                 try:
                     if request and tracing:
-                        await request.app.reporter.finish(
-                            "{}-{}".format( request.app.name, log['log_type']),
-                            span)
+                        span.set_tag(
+                            'component', '{}-{}'.format(request.app.name, log['log_type']))
+                        span.finish()
                         log.update({
                             'duration': span.duration,
                             'end_time': span.start_time + span.duration
@@ -178,7 +178,7 @@ def logger(type=None, category=None, detail=None, description=None,
                     else:
                         _logger.info('{} is success'.format(fn.__name__), log)
                 except Exception as e:
-                    _log.info("dddddddddddddddddddddd")
+                    _log.excepion(e)
 
         _decorator.detail = detail
         _decorator.description = description
@@ -190,30 +190,8 @@ def logger(type=None, category=None, detail=None, description=None,
     return decorator
 
 class AioReporter(SpanRecorder):
-    def __init__(self, service_name=None, queue=None):
-        self.service_name = service_name
-        self.annotation_filter = set()
-        self.cli = None
+    def __init__(self, queue=None):
         self.queue = queue
 
-    def create_span(self, span_id, parent_span_id, trace_id, span_name,
-                    start_time, duration, annotations,
-                    binary_annotations):
-        span_dict = {
-            'traceId': trace_id,
-            'name': span_name,
-            'id': span_id,
-            'timestamp': start_time,
-            'duration': duration,
-            'annotations': annotations,
-            'binary_annotations': binary_annotations
-        }
-        return span_dict
-
     def record_span(self, span):
-        pass
-
-    async def finish(self, service_name, span):
-        span.set_tag('component', service_name)
-        span.finish()
-        await self.queue.put(span)
+        self.queue.put_nowait(span)

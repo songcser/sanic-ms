@@ -3,44 +3,31 @@
 
 import logging
 import opentracing
-from aiohttp import ClientSession
-from ethicall_common.loggers import AioReporter
+from aiohttp import ClientSession, hdrs
 
 logger = logging.getLogger('sanic')
 
 class Client:
 
-    def __init__(self, loop=None, url=None, **kwargs):
-        self._client = ClientSession(loop=loop, **kwargs)
+    def __init__(self, loop=None, url=None, client=None, **kwargs):
+        self._client = client if client else ClientSession(loop=loop, **kwargs)
         self._url = url
 
     def cli(self, req):
         span = opentracing.tracer.start_span(operation_name='get', child_of=req['span'])
-        return ClientConn(self._client, url=self._url, span=span,
-                      reporter=req.app.reporter)
+        return ClientSessionConn(self._client, url=self._url, span=span)
 
     def close(self):
         self._client.close()
 
 
-class ClientConn:
+class ClientSessionConn:
     _client = None
 
-    def __init__(self, client, url=None, span=None, reporter=None, **kwargs):
+    def __init__(self, client, url=None, span=None, **kwargs):
         self._client = client
         self._url = url
         self._span = span
-        self._reporter = reporter
-
-    @property
-    def cli(self):
-        return self._client
-
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        await self._reporter.finish('http-client', self._span)
 
     def handler_url(self, url):
         if url.startswith("http"):
@@ -62,39 +49,32 @@ class ClientConn:
         return http_header_carrier
 
 
-    def request(self, method, url, *args, **kwargs):
+    def request(self, method, url, **kwargs):
         headers = self.before(method, url)
-        return self._client.request(method, self.handler_url(url),
-                                    headers=headers, *args, **kwargs)
+        res = self._client.request(method, self.handler_url(url),
+                                   headers=headers, **kwargs)
+        self._span.set_tag('component', 'http-client')
+        self._span.finish()
+        return res
 
     def get(self, url, allow_redirects=True, **kwargs):
-        headers = self.before('GET', url)
-        return self._client.get(self.handler_url(url), allow_redirects=True,
-                                headers=headers, **kwargs)
+        return self.request(hdrs.METH_GET, url, allow_redirects=True,
+                       **kwargs)
 
     def post(self, url, data=None, **kwargs):
-        headers = self.before('POST', url)
-        return self._client.post(self.handler_url(url), data=data,
-                                 headers=headers, **kwargs)
+        return self.request(hdrs.METH_POST, url, data=data, **kwargs)
 
     def put(self, url, data=None, **kwargs):
-        headers = self.before('PUT', url)
-        return self._client.put(self.handler_url(url), data=data,
-                                headers=headers, **kwargs)
+        return self.request(hdrs.METH_PUT, url, data=data, **kwargs)
 
     def delete(self, url, **kwargs):
-        headers = self.before('DELETE', url)
-        return self._client.delete(self.handler_url(url), headers=headers, **kwargs)
+        return self.request(hdrs.METH_DELETE, url, **kwargs)
 
     def head(self, url, allow_redirects=False, **kwargs):
-        headers = self.before('HEAD', url)
-        return self._client.head(self.handler_url(url), headers=headers,
-                                 allow_redirects=allow_redirects, **kwargs)
+        return self.request(hdrs.METH_HEAD, url, allow_redirects=allow_redirects, **kwargs)
 
     def options(self, url, allow_redirects=True, **kwargs):
-        headers = self.before('OPTIONS', url)
-        return self._client.options(self.handler_url(url), headers=headers,
-                                    allow_redirects=allow_redirects, **kwargs)
+        return self.request(hdrs.METH_OPTIONS, url, allow_redirects=allow_redirects, **kwargs)
 
     def close(self):
         self._client.close()

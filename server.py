@@ -69,12 +69,15 @@ async def before_srver_start(app, loop):
     queue = asyncio.Queue()
     app.queue = queue
     loop.create_task(consume(queue, app.config.ZIPKIN_SERVER))
-    reporter = AioReporter(app.name, queue=queue)
-    app.reporter = reporter
+    reporter = AioReporter(queue=queue)
     tracer = BasicTracer(recorder=reporter)
     tracer.register_required_propagators()
     opentracing.tracer = tracer
-    app.db = await ConnectionPool(loop=loop, reporter=reporter).init(DB_CONFIG=DB_CONFIG)
+    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG=DB_CONFIG)
+
+@app.listener('before_server_stop')
+async def before_server_stop(app, loop):
+    app.queue.join()
 
 def before_request(request):
     try:
@@ -102,6 +105,8 @@ async def cros(request):
                    'Access-Control-Allow-Headers': 'Content-Type',
                    'Access-Control-Allow-Methods': 'POST, PUT, DELETE'}
         return json({'status': True}, headers=headers)
+    if request.method == 'POST' or request.method == 'PUT':
+        request['data'] = request.json
     span = before_request(request)
     request['span'] = span
 
@@ -125,7 +130,8 @@ async def cors_res(request, response):
     response.headers["Access-Control-Allow-Headers"] = "Content-Type"
     response.headers["Access-Control-Allow-Methods"] = "POST, PUT, DELETE"
     if span:
-        await request.app.reporter.finish(request.app.name, span)
+        span.set_tag('component', request.app.name)
+        span.finish()
     return response
 
 @app.exception(RequestTimeout)
@@ -199,10 +205,11 @@ async def consume(q, zs):
                     annotations,
                     binary_annotations,
                 )
-                async with session.post(zs, json=[span_record]) as res:
-                    logger.info(await res.text())
+                q.task_done()
+                #async with session.post(zs, json=[span_record]) as res:
+                #    pass
             except Exception as e:
                 logger.error("{}".format(e))
                 raise e
             finally:
-                q.task_done()
+                pass

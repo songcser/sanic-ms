@@ -106,9 +106,10 @@ def build_spec(app, loop):
                             })
                 else:
                     body_parameters.append({
-                        **serialize_schema(route_spec.consumes),
+                        'schema': {**serialize_schema(route_spec.consumes)},
                         'in': 'body',
                         'name': 'body',
+                        'required': True,
                     })
             endpoint = remove_nulls({
                 'operationId': route_spec.operation or route.name,
