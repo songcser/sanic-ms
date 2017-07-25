@@ -19,7 +19,7 @@ from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
-from config import DB_CONFIG, ZIPKIN_SERVER
+from service.config import DB_CONFIG, ZIPKIN_SERVER
 from ethicall_common.db import ConnectionPool
 from ethicall_common.client import Client
 from ethicall_common.utils import jsonify
@@ -29,8 +29,8 @@ from ethicall_common.openapi import blueprint as openapi_blueprint
 #from ethicall_common.swagger import blueprint as swagger_blueprint
 from . import utils
 
-with open('ethicall_common/logging.yml') as f:
-    logging.config.dictConfig(yaml.load(f))
+#with open('ethicall_common/logging.yml') as f:
+#    logging.config.dictConfig(yaml.load(f))
 
 logger = logging.getLogger('sanic')
 # make app
@@ -73,7 +73,7 @@ async def before_srver_start(app, loop):
     tracer = BasicTracer(recorder=reporter)
     tracer.register_required_propagators()
     opentracing.tracer = tracer
-    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG=DB_CONFIG)
+    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG)
 
 @app.listener('before_server_stop')
 async def before_server_stop(app, loop):
@@ -208,6 +208,8 @@ async def consume(q, zs):
                 q.task_done()
                 #async with session.post(zs, json=[span_record]) as res:
                 #    pass
+            except RuntimeError as e:
+                break
             except Exception as e:
                 logger.error("{}".format(e))
                 raise e

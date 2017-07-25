@@ -6,7 +6,7 @@ import arrow
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
-from config import DB_CONFIG
+from service.config import DB_CONFIG
 
 
 db = PostgresqlDatabase(**DB_CONFIG)

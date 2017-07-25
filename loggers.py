@@ -13,7 +13,7 @@ import functools
 
 from sanic.request import Request
 from basictracer.recorder import SpanRecorder
-from config import ENV_NAME
+from service.config import ENV_NAME
 
 from . import utils
 

@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
 import ujson
 import unittest
 import logging
@@ -10,9 +9,14 @@ from itertools import repeat
 from multidict import CIMultiDict
 from aiohttp import hdrs, ClientResponse, StreamReader
 from sanic.views import CompositionView
+from asyncpg import create_pool
 from urllib.parse import urlparse, parse_qsl, urlencode
 
 from ethicall_common.client import Client, ClientSessionConn
+from ethicall_common.db import ConnectionPool
+
+from service.config import DB_CONFIG
+from service.migrations import migrations
 
 logger = logging.getLogger('sanic')
 
@@ -52,7 +56,6 @@ class MockResponse(object):
         """Normalize url to make comparisons."""
         _url = url.split('?')[0]
         query = urlencode(sorted(parse_qsl(urlparse(url).query)))
-
         return '{}?{}'.format(_url, query) if query else _url
 
     def match(self, method, url):
@@ -206,7 +209,10 @@ class APITestCase(unittest.TestCase):
         self._mock = MockClient()
         @self._app.listener('before_server_start')
         async def set_mock_client(app, loop):
+            if app.client:
+                app.client.close()
             app.client = self._mock
+            app.db = await ConnectionPool(loop=loop).init(DB_CONFIG)
         self.client = TestAPIClient(self._app, self._blueprint)
 
     def tearDown(self):
