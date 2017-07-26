@@ -50,7 +50,7 @@ def info(version=None, author=None, datetime=None):
     decorator.datetime = datetime
     return decorator
 
-class MigrationModel(object):
+class MigrationModel:
     _db = db
     _migrator = migrator
 
@@ -93,3 +93,8 @@ class MigrationModel(object):
     def drop_index(self, col):
         print('Migrating==> [%s] drop_index: %s' % (self._name, col))
         return self._migrator.drop_index(self._name, col)
+
+    def auto_migrate(self):
+        for fn in dir(self):
+            if fn.startswith('migrate_') and hasattr(getattr(self, fn), '__call__'):
+                getattr(self, fn)()
