@@ -104,7 +104,7 @@ async def cros(request):
         headers = {'Access-Control-Allow-Origin': '*',
                    'Access-Control-Allow-Headers': 'Content-Type',
                    'Access-Control-Allow-Methods': 'POST, PUT, DELETE'}
-        return json({'status': True}, headers=headers)
+        return json({'code': 0}, headers=headers)
     if request.method == 'POST' or request.method == 'PUT':
         request['data'] = request.json
     span = before_request(request)
@@ -115,7 +115,7 @@ async def cors_res(request, response):
     span = request['span'] if 'span' in request else None
     if response is None:
         return response
-    result = {'status': True}
+    result = {'code': 0}
     if not isinstance(response, HTTPResponse):
         if isinstance(response, tuple) and len(response) == 2:
             result.update({

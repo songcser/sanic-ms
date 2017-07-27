@@ -169,6 +169,7 @@ async def get_hospital_by_id(request, id):
 
 [opentracing](https://github.com/opentracing/opentracing-python)
 [zipkin](https://github.com/openzipkin/zipkin)
+[jaeger](https://uber.github.io/jaeger/)
 
 
 # Test
@@ -236,6 +237,8 @@ coverage html -d reports
 Example:
 
 ```
+from ethicall_common import doc
+
 @visit_bp.get('/visit_tasks/<id:int>')
 @doc.summary("获取拜访任务")
 @doc.description("获取拜访任务")
@@ -253,12 +256,16 @@ async def get_visit_task(request, id):
 * consumes: request的body数据
 * produces: response的返回数据
 * tag: API标签
-* 在consumes和produces中传入的参数可以是peewee的model,会解析model生成API数据
+* 在consumes和produces中传入的参数可以是peewee的model,会解析model生成API数据, 在field字段的help_text参数来表示引用对象
 * http://localhost:8000/openapi/spec.json获取生成的json数据
 
 ### Response
 
 在返回时，不要返回response，直接返回原始数据，会在Middleware中对返回的数据进行处理，返回统一的格式，具体的格式可以[查看](http://wiki.ethicall.cn/pages/viewpage.action?pageId=8520132)
+
+#### 相关连接
+
+[swagger](https://swagger.io/)
 
 # Exception
 
@@ -273,7 +280,7 @@ from ethicall_common.exception import ServerError
 
 @visit_bp.delete('/visit_tasks/<id:int>')
 async def del_visit_tqsk(request, id):
-    raise ServerError('内部错误')
+    raise ServerError(error='内部错误',code='10500', message="msg")
 ```
 
 * code: 错误码，无异常时为0，其余值都为异常

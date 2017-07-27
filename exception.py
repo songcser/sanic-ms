@@ -8,7 +8,7 @@ class CustomException(Exception):
     code = 100001
     message = None
     error = None
-    def __init__(self, error=None, message=None, code=None, status_code=None):
+    def __init__(self, error=None, code=None, message=None, status_code=None):
         super().__init__(message)
         if message:
             self.message = message
