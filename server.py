@@ -73,6 +73,7 @@ async def before_srver_start(app, loop):
     tracer = BasicTracer(recorder=reporter)
     tracer.register_required_propagators()
     opentracing.tracer = tracer
+    logger.info(DB_CONFIG)
     app.db = await ConnectionPool(loop=loop).init(DB_CONFIG)
 
 @app.listener('before_server_stop')
