@@ -27,6 +27,43 @@
 
 创建task消费queue中对span，用于日志追踪
 
+
+### 异步框架
+由于使用的是异步框架，可以将一些IO请求并行处理
+
+Example:
+
+```
+async def async_request(calls):
+    results = await asyncio.gather(*[ call[2] for call in calls])
+    for index, obj in enumerate(results):
+        call = calls[index]
+        call[0][call[1]] = results[index]
+
+
+@visit_bp.get('/visit_tasks/<id:int>')
+@doc.summary("获取拜访任务")
+@doc.description("获取拜访任务")
+@doc.produces({"result": VisitTaskApi})
+async def get_visit_task(request, id):
+    async with request.app.db.acquire(request) as cur:
+        sql, params = select_sql('visit_task', id=id)
+        data = await cur.fetchrow(sql, *params)
+    calls = [
+        [data, 'hospital_id', get_hospital_by_id(request, data['hospital_id'])],
+        [data, 'city_id', get_city_by_id(request, data['city_id'])],
+        [data, 'product_ids', get_products_by_ids(request, data['product_ids'])],
+        [data, 'users_ids', get_users_by_id(request, data['users_ids'])],
+        [data, 'literatures', get_literatures_by_ids(request, data['literatures'])],
+        [data, 'questionnaires', get_questionnaires_by_ids(request, data['questionnaires'])],
+        [data, 'feedbacks', get_feedbacks_by_ids(request, data['feedbacks'])],
+    ]
+    await async_request(calls)
+    return data
+```
+get_hospital_by_id, get_city_by_id, get_products_by_ids等都是并行进行的。
+
+
 #### 相关连接
 [sanic](https://github.com/channelcat/sanic)
 
