@@ -206,6 +206,7 @@ async def consume(q, zs):
                 annotations,
                 binary_annotations,
             )
+            logger.info(span_record)
                 #async with session.post(zs, json=[span_record]) as res:
                 #    pass
             _log.info("{} span".format(service_name), span_record)
