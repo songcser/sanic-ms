@@ -23,8 +23,8 @@ STANDARD_ANNOTATIONS = {
 }
 STANDARD_ANNOTATIONS_KEYS = frozenset(STANDARD_ANNOTATIONS.keys())
 
-_log = logging.getLogger('sanic')
-_logger = logging.getLogger('zipkin')
+_logger = logging.getLogger('sanic')
+
 
 def _default_json_default(obj):
     """
@@ -47,7 +47,6 @@ class RedisHandler(logging.Handler):
         self.redis.rpush(self.key, data)
 
 class JsonFormatter(logging.Formatter):
-
     def __init__(self,
                  fmt=None,
                  json_cls=None,
@@ -176,7 +175,7 @@ def logger(type=None, category=None, detail=None, description=None,
                     else:
                         _logger.info('{} is success'.format(fn.__name__), log)
                 except Exception as e:
-                    _log.excepion(e)
+                    _logger.excepion(e)
 
         _decorator.detail = detail
         _decorator.description = description

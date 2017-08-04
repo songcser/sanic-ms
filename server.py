@@ -8,12 +8,13 @@ import logging.config
 import datetime
 import yaml
 import aiohttp
+import sys
 #import queue
 import opentracing
 from opentracing.ext import tags
 from basictracer import BasicTracer
 
-from sanic import Sanic
+from sanic import Sanic, config
 from sanic.handlers import ErrorHandler
 from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
@@ -29,16 +30,10 @@ from ethicall_common.openapi import blueprint as openapi_blueprint
 #from ethicall_common.swagger import blueprint as swagger_blueprint
 from . import utils
 
-#with open('ethicall_common/logging.yml') as f:
-#    logging.config.dictConfig(yaml.load(f))
+with open('ethicall_common/logging.yml') as f:
+    logging.config.dictConfig(yaml.load(f))
 
-logger = logging.getLogger('sanic')
-# make app
-app = Sanic(__name__)
-app.config.ZIPKIN_SERVER = ZIPKIN_SERVER
-
-app.blueprint(openapi_blueprint)
-#app.blueprint(swagger_blueprint)
+_log = logging.getLogger('zipkin')
 
 class CustomHandler(ErrorHandler):
 
@@ -56,28 +51,6 @@ class CustomHandler(ErrorHandler):
             span.set_tag('error.msg', exception.message)
             return json(data, status=exception.status_code)
         return super().default(request, exception)
-
-app.error_handler = CustomHandler()
-
-def extra_type_serializer(obj):
-    if isinstance(obj, datetime.datetime):
-        return obj.strftime('%Y-%m-%d %H:%M:%S.%f')
-    raise TypeError("%s is not JSON serializable" % repr(obj))
-
-@app.listener('before_server_start')
-async def before_srver_start(app, loop):
-    queue = asyncio.Queue()
-    app.queue = queue
-    loop.create_task(consume(queue, app.config.ZIPKIN_SERVER))
-    reporter = AioReporter(queue=queue)
-    tracer = BasicTracer(recorder=reporter)
-    tracer.register_required_propagators()
-    opentracing.tracer = tracer
-    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG)
-
-@app.listener('before_server_stop')
-async def before_server_stop(app, loop):
-    app.queue.join()
 
 def before_request(request):
     try:
@@ -97,6 +70,43 @@ def before_request(request):
     if ip:
         span.set_tag(tags.PEER_HOST_IPV4, "{}:{}".format(ip[0], ip[1]))
     return span
+
+def create_span(span_id, parent_span_id, trace_id, span_name,
+                start_time, duration, annotations,
+                binary_annotations):
+    span_dict = {
+        'traceId': trace_id,
+        'name': span_name,
+        'id': span_id,
+        'parentId': parent_span_id,
+        'timestamp': start_time,
+        'duration': duration,
+        'annotations': annotations,
+        'binaryAnnotations': binary_annotations
+    }
+    return span_dict
+
+
+
+app = Sanic(__name__, error_handler=CustomHandler())
+app.config.ZIPKIN_SERVER = ZIPKIN_SERVER
+logger = logging.getLogger('sanic')
+app.blueprint(openapi_blueprint)
+
+@app.listener('before_server_start')
+async def before_srver_start(app, loop):
+    queue = asyncio.Queue()
+    app.queue = queue
+    loop.create_task(consume(queue, app.config.ZIPKIN_SERVER))
+    reporter = AioReporter(queue=queue)
+    tracer = BasicTracer(recorder=reporter)
+    tracer.register_required_propagators()
+    opentracing.tracer = tracer
+    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG)
+
+@app.listener('before_server_stop')
+async def before_server_stop(app, loop):
+    app.queue.join()
 
 @app.middleware('request')
 async def cros(request):
@@ -142,24 +152,8 @@ def timeout(request, exception):
 def notfound(request, exception):
     return json({'message': 'Requested URL {} not found'.format(request.url)}, 404)
 
-def create_span(span_id, parent_span_id, trace_id, span_name,
-                start_time, duration, annotations,
-                binary_annotations):
-    span_dict = {
-        'traceId': trace_id,
-        'name': span_name,
-        'id': span_id,
-        'parentId': parent_span_id,
-        'timestamp': start_time,
-        'duration': duration,
-        'annotations': annotations,
-        'binaryAnnotations': binary_annotations
-    }
-    return span_dict
-
 async def consume(q, zs):
     #async with aiohttp.ClientSession() as session:
-    _log = logging.getLogger('zipkin')
     while True:
         # wait for an item from the producer
         try:
@@ -206,12 +200,12 @@ async def consume(q, zs):
                 annotations,
                 binary_annotations,
             )
-            logger.info(span_record)
                 #async with session.post(zs, json=[span_record]) as res:
                 #    pass
             _log.info("{} span".format(service_name), span_record)
             q.task_done()
         except RuntimeError as e:
+            logger.errro(e)
             break
         except Exception as e:
             logger.error("{}".format(e))
