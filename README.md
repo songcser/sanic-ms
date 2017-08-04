@@ -294,7 +294,7 @@ async def get_visit_task(request, id):
 * produces: response的返回数据
 * tag: API标签
 * 在consumes和produces中传入的参数可以是peewee的model,会解析model生成API数据, 在field字段的help_text参数来表示引用对象
-* http://localhost:8000/openapi/spec.json获取生成的json数据
+* http://localhost:8000/openapi/spec.json 获取生成的json数据
 
 ### Response
 

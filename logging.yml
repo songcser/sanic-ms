@@ -33,6 +33,6 @@ loggers:
         propagate: False
         level: INFO
     zipkin:
-        handlers: [console]
+        handlers: [json]
         propagate: False
         level: INFO

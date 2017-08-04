@@ -13,7 +13,7 @@ import functools
 
 from sanic.request import Request
 from basictracer.recorder import SpanRecorder
-from service.config import ENV_NAME
+from service.config import ENV_NAME, APP_NAME
 
 from . import utils
 
@@ -87,13 +87,11 @@ class JsonFormatter(logging.Formatter):
                 'exception': formatted,
             })
 
-        name = 'zipkin'
+        name = fields['name']
         env_name = ENV_NAME
         data.update({
             'index': "%s-%s" % (env_name, name) if env_name else name,
-            'document_type': fields['name'],
-            'type': 'er_base_logger',
-
+            'document_type': APP_NAME,
             '@version': 1,
         })
         if '@timestamp' not in data:
