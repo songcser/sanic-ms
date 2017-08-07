@@ -154,61 +154,61 @@ def notfound(request, exception):
 
 async def consume(q, zs):
     #async with aiohttp.ClientSession() as session:
-    while True:
-        # wait for an item from the producer
-        try:
-            span = await q.get()
-            annotations = []
-            binary_annotations = []
-            annotation_filter = set()
-            service_name = span.tags.pop('component') if 'component' in span.tags else None
-            endpoint = {'serviceName': service_name if service_name else 'service'}
-            if span.tags:
-                for k, v in span.tags.items():
-                    binary_annotations.append({
-                        'endpoint': endpoint,
-                        'key': k,
-                        'value': v
-                    })
-            for log in span.logs:
-                event = log.key_values.get('event') or ''
-                payload = log.key_values.get('payload')
-                an = []
-                start_time = int(span.start_time*1000000)
-                duration = int(span.duration*1000000)
-                if event == 'client':
-                    an = {'cs': start_time,
-                        'cr': start_time + duration}
-                elif event == 'server':
-                    an = {'sr': start_time,
-                        'ss': start_time + duration}
-                else:
-                    binary_annotations["%s@%s" % (event, str(log.timestamp))] = payload
-                for k, v in an.items():
-                    annotations.append({
-                        'endpoint': endpoint,
-                        'timestamp': v,
-                        'value': k
-                    })
-            span_record = create_span(
-                utils.id_to_hex(span.context.span_id),
-                utils.id_to_hex(span.parent_id),
-                utils.id_to_hex(span.context.trace_id),
-                span.operation_name,
-                start_time,
-                duration,
-                annotations,
-                binary_annotations,
-            )
+        while True:
+            # wait for an item from the producer
+            try:
+                span = await q.get()
+                annotations = []
+                binary_annotations = []
+                annotation_filter = set()
+                service_name = span.tags.pop('component') if 'component' in span.tags else None
+                endpoint = {'serviceName': service_name if service_name else 'service'}
+                if span.tags:
+                    for k, v in span.tags.items():
+                        binary_annotations.append({
+                            'endpoint': endpoint,
+                            'key': k,
+                            'value': v
+                        })
+                for log in span.logs:
+                    event = log.key_values.get('event') or ''
+                    payload = log.key_values.get('payload')
+                    an = []
+                    start_time = int(span.start_time*1000000)
+                    duration = int(span.duration*1000000)
+                    if event == 'client':
+                        an = {'cs': start_time,
+                            'cr': start_time + duration}
+                    elif event == 'server':
+                        an = {'sr': start_time,
+                            'ss': start_time + duration}
+                    else:
+                        binary_annotations["%s@%s" % (event, str(log.timestamp))] = payload
+                    for k, v in an.items():
+                        annotations.append({
+                            'endpoint': endpoint,
+                            'timestamp': v,
+                            'value': k
+                        })
+                span_record = create_span(
+                    utils.id_to_hex(span.context.span_id),
+                    utils.id_to_hex(span.parent_id),
+                    utils.id_to_hex(span.context.trace_id),
+                    span.operation_name,
+                    start_time,
+                    duration,
+                    annotations,
+                    binary_annotations,
+                )
                 #async with session.post(zs, json=[span_record]) as res:
-                #    pass
-            _log.info("{} span".format(service_name), span_record)
-            q.task_done()
-        except RuntimeError as e:
-            logger.errro(e)
-            break
-        except Exception as e:
-            logger.error("{}".format(e))
-            raise e
-        finally:
-            pass
+                #    logger.info(await res.text())
+                _log.info("{} span".format(service_name), {"zipkin": [span_record]})
+                q.task_done()
+            except RuntimeError as e:
+                logger.errro(e)
+                break
+            except Exception as e:
+                logger.error("{}".format(e))
+                raise e
+            finally:
+                pass
