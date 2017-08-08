@@ -202,7 +202,7 @@ async def consume(q, zs):
                 )
                 #async with session.post(zs, json=[span_record]) as res:
                 #    logger.info(await res.text())
-                _log.info("{} span".format(service_name), span_record})
+                _log.info("{} span".format(service_name), span_record)
                 q.task_done()
             except RuntimeError as e:
                 logger.errro(e)
