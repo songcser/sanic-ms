@@ -13,8 +13,8 @@ import functools
 
 from sanic.request import Request
 from basictracer.recorder import SpanRecorder
-from service.config import ENV_NAME, APP_NAME
 
+from .config import ENV_NAME, APP_NAME
 from . import utils
 
 STANDARD_ANNOTATIONS = {
@@ -23,8 +23,7 @@ STANDARD_ANNOTATIONS = {
 }
 STANDARD_ANNOTATIONS_KEYS = frozenset(STANDARD_ANNOTATIONS.keys())
 
-_logger = logging.getLogger('sanic')
-
+_logger = logging.getLogger('zipkin')
 
 def _default_json_default(obj):
     """
@@ -125,7 +124,7 @@ def logger(type=None, category=None, detail=None, description=None,
                 'fun_name': fn.__name__,
                 'detail': detail or fn.__name__,  # 方法名或定义URL列表
                 'log_type': type or 'method',
-                'description': description or fn.__doc__ if fn.__doc__ else '',
+                'description': description if description else fn.__doc__ if fn.__doc__ else '',
             }
             span = None
             if request and tracing:
