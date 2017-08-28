@@ -89,7 +89,7 @@ class JsonFormatter(logging.Formatter):
         name = fields['name']
         env_name = ENV_NAME
         data.update({
-            'index': "%s-%s" % (env_name, name) if env_name else name,
+            'index': "%s-%s" % (name, env_name) if env_name else name,
             'document_type': APP_NAME,
             '@version': 1,
         })

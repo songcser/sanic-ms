@@ -29,7 +29,7 @@ loggers:
         propagate: True
         level: DEBUG
     sanic:
-        handlers: [console]
+        handlers: [json]
         propagate: True
         level: DEBUG
     zipkin:
