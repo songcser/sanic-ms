@@ -16,6 +16,13 @@ handlers:
         level: DEBUG
         class: logging.StreamHandler
         formatter: json
+    file:
+        level: INFO
+        class: logging.handlers.RotatingFileHandler
+        formatter: json
+        filename: info.log
+        maxBytes: 1024000
+        backupCount: 10
     redis:
         (): ethicall_common.loggers.RedisHandler
         level: INFO
@@ -34,5 +41,9 @@ loggers:
         level: DEBUG
     zipkin:
         handlers: [json]
+        propagate: True
+        level: DEBUG
+    logstash:
+        handlers: [file]
         propagate: True
         level: DEBUG

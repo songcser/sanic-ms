@@ -20,7 +20,7 @@ from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
-from service.config import DB_CONFIG, ZIPKIN_SERVER
+from .config import DB_CONFIG, ZIPKIN_SERVER
 from ethicall_common.db import ConnectionPool
 from ethicall_common.client import Client
 from ethicall_common.utils import jsonify
