@@ -1,8 +1,8 @@
-# Ethicall Common
+# Sanic Micro Service
 
-微服务基础架构
+基于sanic的微服务基础架构
 
-# Server
+## Server
 
 > 使用sanic异步框架，有比较高的性能，但是使用不当会造成blocking, 所以对于有IO请求的都要选用异步库。**添加库要慎重**
 
@@ -31,7 +31,7 @@
 ### 异步框架
 由于使用的是异步框架，可以将一些IO请求并行处理
 
-Example:
+### Example:
 
 ```
 async def async_request(calls):
@@ -68,13 +68,11 @@ get_hospital_by_id, get_city_by_id, get_products_by_ids等都是并行进行的�
 [sanic](https://github.com/channelcat/sanic)
 
 
-# DB 
+## DB 
 
 > 使用asyncpg, 对数据库连接进行封装
 
-### 使用
-
-Example:
+### Example:
 
 ```
 sql = "SELECT * FROM users WHERE name=$1"
@@ -94,13 +92,11 @@ async with request.app.db.transaction(request) as cur:
 #### 相关连接
 [asyncpg](https://github.com/MagicStack/asyncpg)
 
-# Client
+## Client
 
 > 使用aiohttp中的client，对客户端进行了简单的封装
 
-### 使用 
-
-Example: 
+### Example: 
 
 ```
 @app.listener('before_server_start')
@@ -127,13 +123,11 @@ A session contains a connection pool inside, connection reusage and keep-alives 
 [aiohttp](http://aiohttp.readthedocs.io/en/stable/client.html)
 
 
-# Model & Migration
+## Model & Migration
 
 > ORM使用peewee, 但是只是用来做模型设计和migration, 数据操作使用asyncpg
 
-### 使用
-
-Example:
+### Example:
 
 ```
 # migrations.py
@@ -176,7 +170,7 @@ if __name__ == '__main__':
 
 [peewee](http://docs.peewee-orm.com/en/latest/)
 
-# LOG
+## LOG
 
 * 使用logging, 配置文件为logging.yml
 * JsonFormatter将日志转成json格式，用于输入到ES
@@ -209,13 +203,11 @@ async def get_hospital_by_id(request, id):
 [jaeger](https://uber.github.io/jaeger/)
 
 
-# Test
+## Test
 
 > 单元测试使用unittest
 
-### 使用
-
-Example:
+### Example:
 
 ```
 from ethicall_common.tests import APITestCase
@@ -265,13 +257,11 @@ coverage html -d reports
 [coverage](https://coverage.readthedocs.io/en/coverage-4.4.1/)
 
 
-# API
+## API
 
 > api文档使用swagger
 
-### 使用
-
-Example:
+### Example:
 
 ```
 from ethicall_common import doc
@@ -304,13 +294,11 @@ async def get_visit_task(request, id):
 
 [swagger](https://swagger.io/)
 
-# Exception
+## Exception
 
 > 使用 app.error_handler = CustomHander() 对抛出的异常进行处理
 
-### 使用
-
-Example:
+### Example:
 
 ```
 from ethicall_common.exception import ServerError
