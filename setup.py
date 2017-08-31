@@ -25,8 +25,4 @@ setup(
     package_data={
         'sanic-ms': ['*.py', '*.yml'],
     },
-
-    # metadata for upload to PyPI
-
-    # could also include long_description, download_url, classifiers, etc.
 )
