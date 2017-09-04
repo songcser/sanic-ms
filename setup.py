@@ -1,13 +1,13 @@
 from setuptools import setup, find_packages
 setup(
-    name="sanic-ms",
+    name="sanic_ms",
     version="0.1",
     author="songcser",
     author_email="songjiyi2008@163.com",
     description="This is an Example for Sanic",
     license="MIT",
     keywords="sanic micro service",
-    url="http://example.com/HelloWorld/",   # project home page, if any
+    url="https://github.com/songcser/sanic-ms",   # project home page, if any
     packages=find_packages(),
 
     install_requires=[
@@ -23,6 +23,6 @@ setup(
     ],
 
     package_data={
-        'sanic-ms': ['*.py', '*.yml'],
+        'sanic_ms': ['*.py', '*.yml'],
     },
 )
