@@ -1,8 +1,4 @@
 # -*- coding: utf-8 -*-
-'''
-Create on 2017-04-24
-@author: zhaoye
-'''
 
 import os
 
