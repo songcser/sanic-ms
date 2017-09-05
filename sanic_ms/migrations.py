@@ -6,7 +6,7 @@ import arrow
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
-from service.config import DB_CONFIG
+from sanic_ms.config import DB_CONFIG
 
 
 db = PostgresqlDatabase(**DB_CONFIG)

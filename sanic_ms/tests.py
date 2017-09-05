@@ -13,11 +13,10 @@ from sanic.views import CompositionView
 from asyncpg import create_pool
 from urllib.parse import urlparse, parse_qsl, urlencode
 
-from ethicall_common.client import Client, ClientSessionConn
-from ethicall_common.db import ConnectionPool
+from sanic_ms.client import Client, ClientSessionConn
+from sanic_ms.db import ConnectionPool
 
-from service.config import DB_CONFIG
-from service.migrations import migrations
+from sanic_ms.config import DB_CONFIG
 
 logger = logging.getLogger('sanic')
 

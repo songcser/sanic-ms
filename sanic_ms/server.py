@@ -28,7 +28,7 @@ from sanic_ms.exception import CustomException
 from sanic_ms.loggers import AioReporter
 from sanic_ms.openapi import blueprint as openapi_blueprint
 #from ethicall_common.swagger import blueprint as swagger_blueprint
-from . import utils
+from sanic_ms import utils
 
 with open('ethicall_common/logging.yml') as f:
     logging.config.dictConfig(yaml.load(f))

@@ -5,7 +5,7 @@ import logging
 import opentracing
 
 from asyncpg import create_pool
-from ethicall_common.utils import jsonify
+from sanic_ms.utils import jsonify
 
 
 logger = logging.getLogger('sanic')
