@@ -20,13 +20,13 @@ from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
-from .config import DB_CONFIG, ZIPKIN_SERVER
-from ethicall_common.db import ConnectionPool
-from ethicall_common.client import Client
-from ethicall_common.utils import jsonify
-from ethicall_common.exception import CustomException
-from ethicall_common.loggers import AioReporter
-from ethicall_common.openapi import blueprint as openapi_blueprint
+from config import DB_CONFIG, ZIPKIN_SERVER
+from db import ConnectionPool
+from client import Client
+from utils import jsonify
+from exception import CustomException
+from loggers import AioReporter
+from openapi import blueprint as openapi_blueprint
 #from ethicall_common.swagger import blueprint as swagger_blueprint
 from . import utils
 
