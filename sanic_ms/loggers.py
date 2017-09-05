@@ -14,8 +14,8 @@ import functools
 from sanic.request import Request
 from basictracer.recorder import SpanRecorder
 
-from .config import ENV_NAME, APP_NAME
-from . import utils
+from sanic_ms.config import ENV_NAME, APP_NAME
+from sanic_ms import utils
 
 STANDARD_ANNOTATIONS = {
     'client': {'cs':[], 'cr':[]},
