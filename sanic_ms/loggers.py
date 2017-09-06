@@ -13,7 +13,6 @@ import functools
 from sanic.request import Request
 from basictracer.recorder import SpanRecorder
 
-from sanic_ms.config import ENV_NAME, APP_NAME
 from sanic_ms import utils
 
 STANDARD_ANNOTATIONS = {
@@ -75,10 +74,9 @@ class JsonFormatter(logging.Formatter):
             })
 
         name = fields['name']
-        env_name = ENV_NAME
         data.update({
-            'index': "%s-%s" % (name, env_name) if env_name else name,
-            'document_type': APP_NAME,
+            'index': name,
+            'document_type': name,
             '@version': 1,
         })
         if '@timestamp' not in data:
