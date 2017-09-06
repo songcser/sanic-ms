@@ -1,7 +1,6 @@
 import os
 import sys
 import logging
-import redis
 import opentracing
 import datetime
 import aiohttp
@@ -34,16 +33,6 @@ def _default_json_default(obj):
         return obj.isoformat()
     else:
         return str(obj)
-
-class RedisHandler(logging.Handler):
-    def __init__(self, host, port, key):
-        logging.Handler.__init__(self)
-        self.redis = redis.Redis(host=host, port=port)
-        self.key = key
-
-    def emit(self, record):
-        data = self.format(record)
-        self.redis.rpush(self.key, data)
 
 class JsonFormatter(logging.Formatter):
     def __init__(self,
