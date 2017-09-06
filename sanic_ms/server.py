@@ -30,10 +30,11 @@ from sanic_ms.openapi import blueprint as openapi_blueprint
 #from ethicall_common.swagger import blueprint as swagger_blueprint
 from sanic_ms import utils
 
-with open('ethicall_common/logging.yml') as f:
+with open('sanic_ms/logging.yml') as f:
     logging.config.dictConfig(yaml.load(f))
 
 _log = logging.getLogger('zipkin')
+logger = logging.getLogger('sanic')
 
 class CustomHandler(ErrorHandler):
 
@@ -90,7 +91,6 @@ def create_span(span_id, parent_span_id, trace_id, span_name,
 
 app = Sanic(__name__, error_handler=CustomHandler())
 app.config.ZIPKIN_SERVER = ZIPKIN_SERVER
-logger = logging.getLogger('sanic')
 app.blueprint(openapi_blueprint)
 
 @app.listener('before_server_start')

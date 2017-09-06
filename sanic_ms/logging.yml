@@ -6,7 +6,7 @@ formatters:
     simple:
         format: '%(levelname)s %(message)s'
     json:
-        (): ethicall_common.loggers.JsonFormatter
+        (): sanic_ms.loggers.JsonFormatter
 handlers:
     console:
         level: DEBUG
@@ -23,13 +23,6 @@ handlers:
         filename: info.log
         maxBytes: 1024000
         backupCount: 10
-    redis:
-        (): ethicall_common.loggers.RedisHandler
-        level: INFO
-        formatter: json
-        host: 192.168.2.20
-        port: 6379
-        key: 'er_base_logger_common'
 loggers:
     root:
         handlers: [console]
