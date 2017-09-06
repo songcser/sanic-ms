@@ -2,15 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import asyncio
-import random
 import logging
 import logging.config
 import datetime
 import yaml
 import aiohttp
-import sys
-#import queue
+import os
 import opentracing
+
 from opentracing.ext import tags
 from basictracer import BasicTracer
 
@@ -27,10 +26,9 @@ from sanic_ms.utils import jsonify
 from sanic_ms.exception import CustomException
 from sanic_ms.loggers import AioReporter
 from sanic_ms.openapi import blueprint as openapi_blueprint
-#from ethicall_common.swagger import blueprint as swagger_blueprint
 from sanic_ms import utils
 
-with open('sanic_ms/logging.yml') as f:
+with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
 
 _log = logging.getLogger('zipkin')
