@@ -2,35 +2,65 @@
 
 基于sanic的微服务基础架构
 
-## Server
+## Introduce
 
-> 使用sanic异步框架，有比较高的性能，但是使用不当会造成blocking, 所以对于有IO请求的都要选用异步库。**添加库要慎重**
+使用python做web开发面临的一个最大的问题就是性能，在C10K上python显的有点吃力。为了解决性能问题，也出现了几个异步框架Tornado、Twisted、Gevent 等。这些框架在性能上有些提升，但是也出现了各种古怪的问题难以解决。
 
-### Before Server Start
+为此在python3.6中，官方的异步协程库asyncio正式成为标准。现在有大量的使用asyncio的异步框架，在保留便捷性的同时对性能有了很大的提升。
+
+使用较早的异步框架是aiohttp，它提供了server端和client端，对asyncio做了很好的封装。但是开发方式和使用最多的微框架flask不同，flask开发简单，轻量，高效。将两者结合起来就有了sanic。
+
+Sanic框架是和Flask相似异步协程框架，简单轻量，并且性能很高。本项目就是以sanic为基础搭建的微服务框架。微服务最近很火，它解决了复杂性问题，提高开发效率，便于部署等优点。
+
+正是结合这些优点, 以sanic为基础，集成多个流行的库搭建微服务框架。
+
+## Feature
+
+* 使用sanic异步框架，简单，轻量，高效。
+* 使用uvloop为核心引擎，使sanic在很多情况下单机并发甚至不亚于Golang。
+* 使用asyncpg为数据库驱动，进行数据库连接，执行sql语句执行。
+* 使用aiohttp为Client，对其他微服务进行访问。
+* 使用peewee为ORM，但是只是用来做模型设计和migration。
+* 使用opentracing为日志追踪。
+* 使用unittest做单元测试，并且使用mock来避免访问其他微服务。
+* 使用swagger做API标准，能自动生成API文档。
+
+## Usage
+
+以sanic为基础，集成多个流行的库。
+
+### Server
+
+> 使用sanic异步框架，有较高的性能，但是使用不当会造成blocking, 对于有IO请求的都要选用异步库。**添加库要慎重**。
+> sanic使用uvloop异步驱动，uvloop基于libuv使用Cython编写，性能比nodejs还要高。
+
+功能说明：
+
+#### Before Server Start
 
 * 创建DB连接池
 * 创建Client连接
 * 创建queue, 用于日志追踪
 * 创建opentracing.tracer进行日志追踪
 
-### Middleware
+#### Middleware
 
 * 处理跨域请求
 * 创建span, 用于日志追踪
 * 对response进行封装，统一格式
 
-### Error Handler
+#### Error Handler
 
 对抛出的异常进行处理，返回统一格式
 
-### Task
+#### Task
 
 创建task消费queue中对span，用于日志追踪
 
-### 异步框架
+#### 异步执行
 由于使用的是异步框架，可以将一些IO请求并行处理
 
-### Example:
+Example:
 
 ```
 async def async_request(calls):
@@ -40,10 +70,10 @@ async def async_request(calls):
         call[0][call[1]] = results[index]
 
 
-@visit_bp.get('/visit_tasks/<id:int>')
-@doc.summary("获取拜访任务")
-@doc.description("获取拜访任务")
-@doc.produces({"result": VisitTaskApi})
+@visit_bp.get('/users/<id:int>')
+@doc.summary("获取用户信息")
+@doc.description("获取用户信息")
+@doc.produces({"result": Users})
 async def get_visit_task(request, id):
     async with request.app.db.acquire(request) as cur:
         sql, params = select_sql('visit_task', id=id)
