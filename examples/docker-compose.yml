@@ -8,7 +8,7 @@ services:
     volumes:
       - "${PWD}:/service"
     ports:
-      - "8010:8000"
+      - "8000:8000"
     networks:
       - sanic-network
     environment:

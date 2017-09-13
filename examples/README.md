@@ -57,3 +57,9 @@ docker-compose logs -f server
 ```
 ./develop/test.sh
 ```
+
+## Access
+
+```
+open http://localhost:8080
+```
