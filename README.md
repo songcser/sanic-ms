@@ -16,14 +16,14 @@ Sanic框架是和Flask相似异步协程框架，简单轻量，并且性能很�
 
 ## Feature
 
-* 使用sanic异步框架，简单，轻量，高效。
-* 使用uvloop为核心引擎，使sanic在很多情况下单机并发甚至不亚于Golang。
-* 使用asyncpg为数据库驱动，进行数据库连接，执行sql语句执行。
-* 使用aiohttp为Client，对其他微服务进行访问。
-* 使用peewee为ORM，但是只是用来做模型设计和migration。
-* 使用opentracing为分布式追踪系统。
-* 使用unittest做单元测试，并且使用mock来避免访问其他微服务。
-* 使用swagger做API标准，能自动生成API文档。
+* **使用sanic异步框架，简单，轻量，高效。**
+* **使用uvloop为核心引擎，使sanic在很多情况下单机并发甚至不亚于Golang。**
+* **使用asyncpg为数据库驱动，进行数据库连接，执行sql语句执行。**
+* **使用aiohttp为Client，对其他微服务进行访问。**
+* **使用peewee为ORM，但是只是用来做模型设计和migration。**
+* **使用opentracing为分布式追踪系统。**
+* **使用unittest做单元测试，并且使用mock来避免访问其他微服务。**
+* **使用swagger做API标准，能自动生成API文档。**
 
 ## Usage
 
