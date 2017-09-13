@@ -33,10 +33,26 @@ async def async_request(datas):
         data = datas[index]
         data[0][data[1]] = results[index]
 
+@user_bp.post('/')
+@doc.summary('create user')
+@doc.description('create user info')
+@doc.consumes(Users)
+@doc.produces({'user_id': int})
+async def create_user(request):
+    data = request['data']
+    async with request.app.db.transaction(request) as cur:
+        record = await cur.fetchrow(
+            """ INSERT INTO users(name, age, city_id, role_id)
+                VALUES($1, $2, $3, $4, $5)
+                RETURNING id
+            """, data['name'], data['age'], data['city_id'], data['role_id']
+        )
+        return {'user_id': record['id']}
+
 @user_bp.get('/')
 @doc.summary("get user list")
 @doc.produces([Users])
-async def get_users_list(request):
+async def get_users(request):
     async with request.app.db.acquire(request) as cur:
         records = await cur.fetch(""" SELECT * FROM users """)
         return records
@@ -44,7 +60,7 @@ async def get_users_list(request):
 @user_bp.get('/<id:int>')
 @doc.summary("get user info")
 @doc.produces(Users)
-async def get_users_list(request, id):
+async def get_user(request, id):
     async with request.app.db.acquire(request) as cur:
         records = await cur.fetch(
             """ SELECT * FROM users WHERE id = $1 """, id)
