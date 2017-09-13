@@ -27,7 +27,7 @@ Sanic框架是和Flask相似异步协程框架，简单轻量，并且性能很�
 
 ## Usage
 
-以sanic为基础，集成多个流行的库。
+[Example](https://github.com/songcser/sanic-ms/tree/master/examples)
 
 ## Server
 
