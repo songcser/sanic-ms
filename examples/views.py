@@ -37,7 +37,7 @@ async def async_request(datas):
 @doc.summary('create user')
 @doc.description('create user info')
 @doc.consumes(Users)
-@doc.produces({'user_id': int})
+@doc.produces({'id': int})
 async def create_user(request):
     data = request['data']
     async with request.app.db.transaction(request) as cur:
@@ -47,7 +47,7 @@ async def create_user(request):
                 RETURNING id
             """, data['name'], data['age'], data['city_id'], data['role_id']
         )
-        return {'user_id': record['id']}
+        return {'id': record['id']}
 
 @user_bp.get('/')
 @doc.summary("get user list")
