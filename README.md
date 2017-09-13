@@ -63,34 +63,29 @@ Sanic框架是和Flask相似异步协程框架，简单轻量，并且性能很�
 Example:
 
 ```
-async def async_request(calls):
-    results = await asyncio.gather(*[ call[2] for call in calls])
+async def async_request(datas):
+    # async handler request
+    results = await asyncio.gather(*[data[2] for data in datas])
     for index, obj in enumerate(results):
-        call = calls[index]
-        call[0][call[1]] = results[index]
+        data = datas[index]
+        data[0][data[1]] = results[index]
 
-
-@visit_bp.get('/users/<id:int>')
-@doc.summary("获取用户信息")
-@doc.description("获取用户信息")
-@doc.produces({"result": Users})
-async def get_visit_task(request, id):
+@user_bp.get('/<id:int>')
+@doc.summary("get user info")
+@doc.description("get user info by id")
+@doc.produces(Users)
+async def get_users_list(request, id):
     async with request.app.db.acquire(request) as cur:
-        sql, params = select_sql('visit_task', id=id)
-        data = await cur.fetchrow(sql, *params)
-    calls = [
-        [data, 'hospital_id', get_hospital_by_id(request, data['hospital_id'])],
-        [data, 'city_id', get_city_by_id(request, data['city_id'])],
-        [data, 'product_ids', get_products_by_ids(request, data['product_ids'])],
-        [data, 'users_ids', get_users_by_id(request, data['users_ids'])],
-        [data, 'literatures', get_literatures_by_ids(request, data['literatures'])],
-        [data, 'questionnaires', get_questionnaires_by_ids(request, data['questionnaires'])],
-        [data, 'feedbacks', get_feedbacks_by_ids(request, data['feedbacks'])],
-    ]
-    await async_request(calls)
-    return data
+        record = await cur.fetch(
+            """ SELECT * FROM users WHERE id = $1 """, id)
+        datas = [
+            [record, 'city_id', get_city_by_id(request, record['city_id'])]
+            [record, 'role_id', get_role_by_id(request, record['role_id'])]
+        ]
+        await async_request(datas)
+        return record
 ```
-get_hospital_by_id, get_city_by_id, get_products_by_ids等都是并行进行的。
+get_city_by_id, get_role_by_id是并行处理。
 
 
 #### 相关连接
