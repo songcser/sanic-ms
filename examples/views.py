@@ -8,9 +8,10 @@ from sanic import Blueprint
 from sanic_ms import doc
 from sanic_ms.utils import *
 from sanic_ms.exception import ServerError
+from sanic_ms.loggers import logger
 from models import *
 
-logger = logging.getLogger('sanic')
+_logger = logging.getLogger('sanic')
 
 user_bp = Blueprint('user', url_prefix='users')
 
