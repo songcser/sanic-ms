@@ -4,6 +4,8 @@
 import logging
 import asyncio
 
+from sanic.handlers import ErrorHandler
+
 logger = logging.getLogger('sanic')
 _log = logging.getLogger('zipkin')
 

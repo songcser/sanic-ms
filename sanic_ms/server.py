@@ -14,7 +14,6 @@ from opentracing.ext import tags
 from basictracer import BasicTracer
 
 from sanic import Sanic, config
-from sanic.handlers import ErrorHandler
 from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
@@ -54,11 +53,6 @@ async def before_server_stop(app, loop):
 
 @app.middleware('request')
 async def cros(request):
-    if request.method == 'OPTIONS':
-        headers = {'Access-Control-Allow-Origin': '*',
-                   'Access-Control-Allow-Headers': 'Content-Type',
-                   'Access-Control-Allow-Methods': 'POST, PUT, DELETE'}
-        return json({'code': 0}, headers=headers)
     if request.method == 'POST' or request.method == 'PUT':
         request['data'] = request.json
     span = before_request(request)
@@ -82,9 +76,6 @@ async def cors_res(request, response):
         response = json(result)
         if span:
             span.set_tag('http.status_code', "200")
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Headers"] = "Content-Type"
-    response.headers["Access-Control-Allow-Methods"] = "POST, PUT, DELETE"
     if span:
         span.set_tag('component', request.app.name)
         span.finish()
