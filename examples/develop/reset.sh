@@ -2,7 +2,7 @@
 
 source "$(dirname ${BASH_SOURCE[0]})/utils.sh"
 
-ensure ">>> killing existing services" docker-compose kill db server web
+ensure ">>> killing existing services" docker-compose kill db server
 ensure ">>> removing existing services" docker-compose rm -f -v
 
 if [ -n "${BUILD}" ]

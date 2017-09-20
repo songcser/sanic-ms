@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import arrow
+from datetime import datetime
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
@@ -20,7 +20,7 @@ class MigrationRecord(Model):
     version = CharField()
     author = CharField()
     create_time = DateTimeField(verbose_name='创建时间',
-                                default=arrow.utcnow().datetime)
+                                default=datetime.utcnow())
 
     class Meta:
         db_table = 'migration_record'
@@ -39,7 +39,7 @@ def info(version=None, author=None, datetime=None):
             if mr: return None
             MigrationRecord.create(
                 table=table, version=version, author=author if author else '',
-                datetime=datetime if datetime else arrow.utcnow().naive)
+                datetime=datetime if datetime else datetime.utcnow())
             fn(*args, **kwargs)
         _decorator.version = version
         _decorator.author = author
