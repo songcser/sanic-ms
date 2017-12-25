@@ -2,7 +2,7 @@ import logging
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
-from sanic_ms.migrations import MigrationModel, info, db
+from sanicms.migrations import MigrationModel, info, db
 from models import *
 
 

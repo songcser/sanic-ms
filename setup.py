@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 setup(
-    name="sanic_ms",
+    name="sanicms",
     version="0.1",
     author="songcser",
     author_email="songjiyi2008@163.com",
@@ -23,6 +23,6 @@ setup(
     ],
 
     package_data={
-        'sanic_ms': ['*.py', '*.yml'],
+        'sanicms': ['*.py', '*.yml'],
     },
 )

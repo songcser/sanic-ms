@@ -6,7 +6,7 @@ from sanic.blueprints import Blueprint
 from sanic.response import json
 from sanic.views import CompositionView
 
-from sanic_ms.doc import route_specs, RouteSpec, serialize_schema, definitions
+from sanicms.doc import route_specs, RouteSpec, serialize_schema, definitions
 
 logger = logging.getLogger('sanic')
 

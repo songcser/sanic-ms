@@ -6,7 +6,7 @@ from datetime import datetime
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
-from sanic_ms.config import DB_CONFIG
+from sanicms.config import DB_CONFIG
 
 
 db = PostgresqlDatabase(**DB_CONFIG)

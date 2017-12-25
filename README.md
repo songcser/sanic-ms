@@ -119,7 +119,7 @@ class Users(Model):
 
 # migrations.py
 
-from sanic_ms.migrations import MigrationModel, info, db
+from sanicms.migrations import MigrationModel, info, db
 
 class UserMigration(MigrationModel):
     _model = Users
@@ -255,7 +255,7 @@ async def get_city_by_id(request, id):
 Example:
 
 ```
-from sanic_ms import doc
+from sanicms import doc
 
 @user_bp.post('/')
 @doc.summary('create user')
@@ -297,7 +297,7 @@ async def create_user(request):
 Example:
 
 ```
-from sanic_ms.tests import APITestCase
+from sanicms.tests import APITestCase
 from service.server import app
 
 class TestCase(APITestCase):
@@ -331,7 +331,7 @@ class TestCase(APITestCase):
 
 ```
 coverage erase
-coverage run --source . -m sanic_ms tests
+coverage run --source . -m sanicms tests
 coverage xml -o reports/coverage.xml
 coverage2clover -i reports/coverage.xml -o reports/clover.xml
 coverage html -d reports
@@ -350,7 +350,7 @@ coverage html -d reports
 Example:
 
 ```
-from sanic_ms.exception import ServerError
+from sanicms.exception import ServerError
 
 @visit_bp.delete('/users/<id:int>')
 async def del_user(request, id):
