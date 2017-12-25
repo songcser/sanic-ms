@@ -5,10 +5,10 @@ import asyncio
 
 from sanic import Blueprint
 
-from sanic_ms import doc
-from sanic_ms.utils import *
-from sanic_ms.exception import ServerError
-from sanic_ms.loggers import logger
+from sanicms import doc
+from sanicms.utils import *
+from sanicms.exception import ServerError
+from sanicms.loggers import logger
 from models import *
 
 _logger = logging.getLogger('sanic')

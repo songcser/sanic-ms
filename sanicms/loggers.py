@@ -13,7 +13,7 @@ import functools
 from sanic.request import Request
 from basictracer.recorder import SpanRecorder
 
-from sanic_ms import utils
+from sanicms import utils
 
 STANDARD_ANNOTATIONS = {
     'client': {'cs':[], 'cr':[]},

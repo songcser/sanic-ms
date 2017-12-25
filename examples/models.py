@@ -2,7 +2,7 @@ import datetime
 
 from peewee import Model, DateTimeField, IntegerField, PrimaryKeyField, \
     CharField
-from sanic_ms import doc
+from sanicms import doc
 
 
 class ProvinceApi:

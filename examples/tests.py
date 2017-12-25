@@ -1,5 +1,5 @@
-from ethicall_common.tests import APITestCase
-from service.server import app
+from sanicms.tests import APITestCase
+from server import app
 
 class TestCase(APITestCase):
     _app = app

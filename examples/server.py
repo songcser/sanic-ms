@@ -2,7 +2,7 @@ import logging
 
 from views import user_bp
 
-from sanic_ms.server import app
+from sanicms.server import app
 
 logger = logging.getLogger('sanic')
 

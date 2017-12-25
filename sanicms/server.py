@@ -18,13 +18,13 @@ from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
-from sanic_ms.config import DB_CONFIG, ZIPKIN_SERVER
-from sanic_ms.db import ConnectionPool
-from sanic_ms.client import Client
-from sanic_ms.utils import *
-from sanic_ms.exception import CustomException
-from sanic_ms.loggers import AioReporter
-from sanic_ms.openapi import blueprint as openapi_blueprint
+from sanicms.config import DB_CONFIG, ZIPKIN_SERVER
+from sanicms.db import ConnectionPool
+from sanicms.client import Client
+from sanicms.utils import *
+from sanicms.exception import CustomException
+from sanicms.loggers import AioReporter
+from sanicms.openapi import blueprint as openapi_blueprint
 
 with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
