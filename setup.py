@@ -17,12 +17,10 @@ setup(
         'psycopg2>=2.7.1',
         'asyncpg>=0.11.0',
         'aiohttp>=2.0.7',
-        'opentracing>=1.2.2',
+        'futures==3.1.1',
+        'opentracing==1.2.2',
         'basictracer>=2.2.0',
         'pyyaml>=3.12',
-    ],
-    dependency_links=[
-        'git+ssh://git@github.com:opentracing/opentracing-python.git@master#egg=opentracing-1.2.2',
     ],
     package_data={
         'sanicms': ['*.py', '*.yml'],
