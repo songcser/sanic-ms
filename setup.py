@@ -11,7 +11,6 @@ setup(
     packages=find_packages(),
 
     install_requires=[
-        'futures; python_version == "2.7"',
         'sanic>=0.6.0',
         'uvloop>=0.8.0',
         'peewee>=2.9.1',
@@ -22,7 +21,9 @@ setup(
         'basictracer>=2.2.0',
         'pyyaml>=3.12',
     ],
-
+    dependency_links=[
+        'git+ssh://git@github.com:opentracing/opentracing-python.git@master#egg=opentracing-1.2.2',
+    ],
     package_data={
         'sanicms': ['*.py', '*.yml'],
     },
