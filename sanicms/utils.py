@@ -5,6 +5,8 @@ import logging
 import asyncio
 
 from sanic.handlers import ErrorHandler
+from opentracing.ext import tags
+from sanicms.exception import CustomException
 
 logger = logging.getLogger('sanic')
 _log = logging.getLogger('zipkin')
@@ -71,9 +73,9 @@ async def consume(q, zs):
                             'value': k
                         })
                 span_record = create_span(
-                    utils.id_to_hex(span.context.span_id),
-                    utils.id_to_hex(span.parent_id),
-                    utils.id_to_hex(span.context.trace_id),
+                    id_to_hex(span.context.span_id),
+                    id_to_hex(span.parent_id),
+                    id_to_hex(span.context.trace_id),
                     span.operation_name,
                     start_time,
                     duration,

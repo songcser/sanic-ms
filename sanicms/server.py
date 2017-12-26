@@ -10,7 +10,6 @@ import aiohttp
 import os
 import opentracing
 
-from opentracing.ext import tags
 from basictracer import BasicTracer
 
 from sanic import Sanic, config
@@ -22,7 +21,6 @@ from sanicms.config import DB_CONFIG, ZIPKIN_SERVER
 from sanicms.db import ConnectionPool
 from sanicms.client import Client
 from sanicms.utils import *
-from sanicms.exception import CustomException
 from sanicms.loggers import AioReporter
 from sanicms.openapi import blueprint as openapi_blueprint
 
