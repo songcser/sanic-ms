@@ -16,7 +16,9 @@ from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
-from sanicms.config import DB_CONFIG, ZIPKIN_SERVER
+from sanicms.config import DB_CONFIG, ZIPKIN_SERVER, \
+    ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_ALLOW_HEADERS, \
+    ACCESS_CONTROL_ALLOW_METHODS
 from sanicms.db import ConnectionPool
 from sanicms.client import Client
 from sanicms.utils import *
@@ -50,6 +52,11 @@ async def before_server_stop(app, loop):
 
 @app.middleware('request')
 async def cros(request):
+    if request.method == 'OPTIONS':
+        headers = {'Access-Control-Allow-Origin': ACCESS_CONTROL_ALLOW_ORIGIN,
+                   'Access-Control-Allow-Headers': ACCESS_CONTROL_ALLOW_HEADERS,
+                   'Access-Control-Allow-Methods': ACCESS_CONTROL_ALLOW_METHODS}
+        return json({'code': 0}, headers=headers)
     if request.method == 'POST' or request.method == 'PUT':
         request['data'] = request.json
     span = before_request(request)
@@ -76,6 +83,9 @@ async def cors_res(request, response):
     if span:
         span.set_tag('component', request.app.name)
         span.finish()
+    response.headers["Access-Control-Allow-Origin"] = ACCESS_CONTROL_ALLOW_ORIGIN
+    response.headers["Access-Control-Allow-Headers"] = ACCESS_CONTROL_ALLOW_HEADERS
+    response.headers["Access-Control-Allow-Methods"] = ACCESS_CONTROL_ALLOW_METHODS
     return response
 
 
