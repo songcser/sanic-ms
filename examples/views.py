@@ -34,7 +34,7 @@ async def async_request(datas):
         data = datas[index]
         data[0][data[1]] = results[index]
 
-@user_bp.post('/')
+@user_bp.post('/', name="create_user")
 @doc.summary('create user')
 @doc.description('create user info')
 @doc.consumes(Users)
@@ -50,7 +50,7 @@ async def create_user(request):
         )
         return {'id': record['id']}
 
-@user_bp.get('/')
+@user_bp.get('/', name="get_users")
 @doc.summary("get user list")
 @doc.produces([Users])
 async def get_users(request):
@@ -58,7 +58,7 @@ async def get_users(request):
         records = await cur.fetch(""" SELECT * FROM users """)
         return records
 
-@user_bp.get('/<id:int>')
+@user_bp.get('/<id:int>', name="get_user")
 @doc.summary("get user info")
 @doc.produces(Users)
 async def get_user(request, id):
