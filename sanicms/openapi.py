@@ -57,7 +57,7 @@ def build_spec(app, loop):
     paths = {}
     for uri, route in app.router.routes_all.items():
         if uri.startswith("/swagger") or uri.startswith("/openapi") \
-                or '<file_uri' in uri:
+                or '<file_uri' in uri or uri.endswith("/"):
                 # TODO: add static flag in sanic routes
             continue
 
@@ -121,7 +121,7 @@ def build_spec(app, loop):
                 'parameters': path_parameters + query_string_parameters + body_parameters,
                 'responses': {
                     "200": {
-                        "description": None,
+                        "description": "success",
                         "examples": None,
                         "schema": serialize_schema(route_spec.produces) if route_spec.produces else None
                     }
