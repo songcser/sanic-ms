@@ -5,6 +5,7 @@ services:
       context: .
     links:
       - db
+      - zipkin
     volumes:
       - "${PWD}:/service"
     ports:
@@ -16,7 +17,10 @@ services:
       POSTGRES_SERVICE_USER: postgres
       POSTGRES_SERVICE_HOST: db
       POSTGRES_SERVICE_PORT: 5432
-
+      ACCESS_CONTROL_ALLOW_ORIGIN: "*"
+      ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
+      ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
+      ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"
@@ -32,11 +36,12 @@ services:
     image: "openzipkin/zipkin"
     ports:
       - "9410:9410"
+      - "9411:9411"
     networks:
       - sanic-network
 
   swagger:
-    image: "swaggerapi/swagger-ui:v2.2.9"
+    image: "swaggerapi/swagger-ui:v3.0.5"
     links:
       - server
     ports:
@@ -44,7 +49,7 @@ services:
     networks:
       - sanic-network
     environment:
-      API_URL: "http://server:8000/openapi/spec.json"
+      API_URL: "http://localhost:8000/openapi/spec.json"
   
 
 networks:

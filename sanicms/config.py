@@ -10,7 +10,7 @@ DB_CONFIG = {
     'database': os.environ.get('POSTGRES_SERVICE_DB_NAME', 'postgres')
 }
 
-ZIPKIN_SERVER = 'http://example:9411/api/v1/spans'
+ZIPKIN_SERVER = os.environ.get('ZIPKIN_SERVER', None)
 ACCESS_CONTROL_ALLOW_ORIGIN = os.environ.get("ACCESS_CONTROL_ALLOW_ORIGIN", "")
 ACCESS_CONTROL_ALLOW_HEADERS = os.environ.get("ACCESS_CONTROL_ALLOW_HEADERS", "")
 ACCESS_CONTROL_ALLOW_METHODS = os.environ.get("ACCESS_CONTROL_ALLOW_METHODS", "")
