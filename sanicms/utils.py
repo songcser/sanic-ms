@@ -3,6 +3,7 @@
 
 import logging
 import asyncio
+import aiohttp
 import opentracing
 
 from sanic.handlers import ErrorHandler

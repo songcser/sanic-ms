@@ -33,7 +33,7 @@ services:
       - sanic-network
 
   zipkin:
-    image: "openzipkin/zipkin"
+    image: "openzipkin/zipkin:2.4.2"
     ports:
       - "9410:9410"
       - "9411:9411"
