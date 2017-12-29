@@ -36,7 +36,7 @@ def id_to_hex(id):
     return '{0:x}'.format(id)
 
 async def consume(q, zs):
-    #async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession() as session:
         while True:
             # wait for an item from the producer
             try:
@@ -83,8 +83,8 @@ async def consume(q, zs):
                     annotations,
                     binary_annotations,
                 )
-                #async with session.post(zs, json=[span_record]) as res:
-                #    logger.info(await res.text())
+                async with session.post(zs, json=[span_record]) as res:
+                    logger.info(await res.text())
                 _log.info("{} span".format(service_name), span_record)
                 q.task_done()
             except RuntimeError as e:

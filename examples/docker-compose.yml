@@ -26,7 +26,26 @@ services:
   db:
     image: "postgres:9.6"
     networks:
-        - sanic-network
+      - sanic-network
+
+  zipkin:
+    image: "openzipkin/zipkin"
+    ports:
+      - "9410:9410"
+    networks:
+      - sanic-network
+
+  swagger:
+    image: "swaggerapi/swagger-ui:v2.2.9"
+    links:
+      - server
+    ports:
+      - "8090:8080"
+    networks:
+      - sanic-network
+    environment:
+      API_URL: "http://server:8000/openapi/spec.json"
+  
 
 networks:
   sanic-network:

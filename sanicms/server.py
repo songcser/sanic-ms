@@ -6,7 +6,6 @@ import logging
 import logging.config
 import datetime
 import yaml
-import aiohttp
 import os
 import opentracing
 
