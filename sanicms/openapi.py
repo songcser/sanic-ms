@@ -27,7 +27,7 @@ def remove_nulls(dictionary, deep=True):
 @blueprint.listener('before_server_start')
 def build_spec(app, loop):
     _spec['swagger'] = '2.0'
-    _spec['info'] = {
+    _spec['info'] = remove_nulls({
         "version": getattr(app.config, 'API_VERSION', '1.0.0'),
         "title": getattr(app.config, 'API_TITLE', 'API'),
         "description": getattr(app.config, 'API_DESCRIPTION', ''),
@@ -35,11 +35,11 @@ def build_spec(app, loop):
         "contact": {
             "email": getattr(app.config, 'API_CONTACT_EMAIL', None)
         },
-        "license": {
-            "email": getattr(app.config, 'API_LICENSE_NAME', None),
-            "url": getattr(app.config, 'API_LICENSE_URL', None)
-        }
-    }
+        #  "license": {
+        #      "email": getattr(app.config, 'API_LICENSE_NAME', None),
+        #      "url": getattr(app.config, 'API_LICENSE_URL', None)
+        #  }
+    })
     _spec['schemes'] = getattr(app.config, 'API_SCHEMES', ['http'])
 
     # --------------------------------------------------------------- #
