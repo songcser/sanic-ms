@@ -57,7 +57,7 @@ def build_spec(app, loop):
     paths = {}
     for uri, route in app.router.routes_all.items():
         if uri.startswith("/swagger") or uri.startswith("/openapi") \
-                or '<file_uri' in uri or uri.endswith("/"):
+                or '<file_uri' in uri or not uri.endswith("/"):
                 # TODO: add static flag in sanic routes
             continue
 
