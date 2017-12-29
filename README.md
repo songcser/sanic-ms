@@ -29,6 +29,13 @@ Sanic框架是和Flask相似异步协程框架，简单轻量，并且性能很�
 
 [Example](https://github.com/songcser/sanic-ms/tree/master/examples)
 
+#### Swagger API
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528294957.jpg)
+
+#### Zipkin Server
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528423339.jpg)
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528479787.jpg)
+
 ## Server
 
 > 使用sanic异步框架，有较高的性能，但是使用不当会造成blocking, 对于有IO请求的都要选用异步库。**添加库要慎重**。
