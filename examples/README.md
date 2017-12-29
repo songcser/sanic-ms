@@ -58,8 +58,24 @@ docker-compose logs -f server
 ./develop/test.sh
 ```
 
-## Access
+## Access Server
 
 ```
-open http://localhost:8080
+open http://localhost:8000
+
+open http://localhost:8000/users/
 ```
+
+## Access API
+
+```
+open http://localhost:8090
+```
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528294957.jpg)
+
+## Access Zipkin
+```
+open http://localhost:9411
+```
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528423339.jpg)
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528479787.jpg)
