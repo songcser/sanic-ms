@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import date, datetime
-from peewee import BaseModel, ObjectIdDescriptor, ReverseRelationDescriptor
+from peewee import Model
 from playhouse.postgres_ext import ArrayField
 import logging
 
@@ -151,8 +151,6 @@ class PeeweeObject(Field):
                 value.field.db_column if value.field.db_column else key: self.field_serialize(value)
                 for key, value in self.cls.__dict__.items()
                 if not key.startswith('_') and key != 'DoesNotExist'
-                and not isinstance(value, ObjectIdDescriptor)
-                and not isinstance(value, ReverseRelationDescriptor)
             },
             **super().serialize()
         }
@@ -160,7 +158,7 @@ class PeeweeObject(Field):
     def db_field_serialize(self, ttype, desc=None, format=None, related=None):
         if related:
             schema_type = type(related)
-            if issubclass(schema_type, BaseModel):
+            if issubclass(schema_type, Model):
                 return PeeweeObject(related).serialize()
             if schema_type is type:
                 if ttype == 'array': return List(related).serialize()
@@ -249,7 +247,7 @@ def serialize_schema(schema):
     # Object
     # --------------------------------------------------------------- #
     else:
-        if issubclass(schema_type, BaseModel):
+        if issubclass(schema_type, Model):
             return PeeweeObject(schema).serialize()
         elif issubclass(schema_type, Field):
             return schema.serialize()
