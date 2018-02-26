@@ -13,7 +13,7 @@ setup(
     install_requires=[
         'sanic>=0.7.0',
         'uvloop>=0.8.0',
-        'peewee>=3.1.0',
+        'peewee>=3.0.1',
         'psycopg2>=2.7.1',
         'asyncpg>=0.11.0',
         'aiohttp>=2.0.7',
