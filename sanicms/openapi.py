@@ -57,9 +57,10 @@ def build_spec(app, loop):
     paths = {}
     for uri, route in app.router.routes_all.items():
         if uri.startswith("/swagger") or uri.startswith("/openapi") \
-                or '<file_uri' in uri or not uri.endswith("/"):
+                or '<file_uri' in uri:
                 # TODO: add static flag in sanic routes
             continue
+        print("ddddddddd")
 
         # --------------------------------------------------------------- #
         # Methods
@@ -111,8 +112,12 @@ def build_spec(app, loop):
                         'name': 'body',
                         'required': True,
                     })
+
+            print(route_spec.produces)
+            operationId = '%s_' % _handler.__name__ if not uri.endswith("/") \
+                else _handler.__name__
             endpoint = remove_nulls({
-                'operationId': route_spec.operation or route.name,
+                'operationId': route_spec.operation or operationId,
                 'summary': route_spec.summary,
                 'description': route_spec.description,
                 'consumes': consumes_content_types,

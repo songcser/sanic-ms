@@ -1,6 +1,6 @@
 from collections import defaultdict
 from datetime import date, datetime
-from peewee import Model
+from peewee import ModelBase
 from playhouse.postgres_ext import ArrayField
 import logging
 
@@ -148,7 +148,7 @@ class PeeweeObject(Field):
         return {
             'type': 'object',
             'properties': {
-                value.field.db_column if value.field.db_column else key: self.field_serialize(value)
+                value.field.column_name if value.field.column_name else key: self.field_serialize(value)
                 for key, value in self.cls.__dict__.items()
                 if not key.startswith('_') and key != 'DoesNotExist'
             },
@@ -158,7 +158,7 @@ class PeeweeObject(Field):
     def db_field_serialize(self, ttype, desc=None, format=None, related=None):
         if related:
             schema_type = type(related)
-            if issubclass(schema_type, Model):
+            if issubclass(schema_type, ModelBase):
                 return PeeweeObject(related).serialize()
             if schema_type is type:
                 if ttype == 'array': return List(related).serialize()
@@ -171,44 +171,62 @@ class PeeweeObject(Field):
             return value
 
     def field_serialize(self, schema):
+        print(schema)
         field = schema.field
+        db_field = field.field_type
+        print(field)
         if isinstance(field, ArrayField):
             return self.db_field_serialize('array', field.verbose_name, None,
                                            field.help_text)
-        elif field.db_field == 'string':
+        elif db_field == 'DEFAULT':
             return self.db_field_serialize('string', field.verbose_name, None,
                                            field.help_text)
-        elif field.db_field == 'int':
+        elif db_field == 'INT':
             if hasattr(field, 'rel_model'):
                 return self.db_field_serialize('integer', field.verbose_name,
                                                None, field.rel_model)
             return self.db_field_serialize('integer', field.verbose_name, None,
                                            field.help_text)
-        elif field.db_field == 'bigint':
+        elif db_field == 'BIGINT':
             return self.db_field_serialize('integer', field.verbose_name,
                                            'int64', field.help_text)
-        elif field.db_field == 'float':
+        elif db_field == 'SMALLINT':
+            return self.db_field_serialize('integer', field.verbose_name,
+                                           'int', field.help_text)
+        elif db_field == 'AUTO':
+            return self.db_field_serialize('integer', field.verbose_name,
+                                           'int', field.help_text)
+        elif db_field == 'FLOAT':
             return self.db_field_serialize('number', field.verbose_name,
                                            'float', field.help_text)
-        elif field.db_field == 'double':
+        elif db_field == 'DOUBLE':
             return self.db_field_serialize('number', field.verbose_name,
                                            'double', field.help_text)
-        elif field.db_field == 'datetime':
+        elif db_field == 'DECIMAL':
+            return self.db_field_serialize('number', field.verbose_name,
+                                           None, field.help_text)
+        elif db_field == 'VARCHAR' or db_field == 'CHAR' or db_field == "TEXT":
+            return self.db_field_serialize('string', field.verbose_name,
+                                           None, field.help_text)
+        elif db_field == 'UUID':
+            return self.db_field_serialize('string', field.verbose_name,
+                                           'uuid', field.help_text)
+        elif db_field == 'BLOB':
+            return self.db_field_serialize('string', field.verbose_name,
+                                           'binary', field.help_text)
+        elif db_field == 'DATETIME':
             return self.db_field_serialize('string', field.verbose_name,
                                            'date-time', field.help_text)
-        elif field.db_field == 'date':
+        elif db_field == 'DATE':
             return self.db_field_serialize('string', field.verbose_name,
                                            'date', field.help_text)
-        elif field.db_field == 'text':
-            return self.db_field_serialize('string', field.verbose_name, None,
-                                           field.help_text)
-        elif field.db_field == 'bool':
+        elif db_field == 'TIME':
+            return self.db_field_serialize('string', field.verbose_name,
+                                           'date-time', field.help_text)
+        elif db_field == 'BOOL':
             return self.db_field_serialize('boolean', field.verbose_name, None,
                                            field.help_text)
-        elif field.db_field == 'primary_key':
-            return self.db_field_serialize('integer', field.verbose_name, None,
-                                           field.help_text)
-        elif field.db_field == 'json':
+        elif db_field == 'JSON' or db_field == 'JSONB':
             return self.db_field_serialize('object', field.verbose_name, None,
                                            field.help_text)
 
@@ -220,6 +238,7 @@ class PeeweeObject(Field):
 
 def serialize_schema(schema):
     schema_type = type(schema)
+    print(schema_type)
     # --------------------------------------------------------------- #
     # Class
     # --------------------------------------------------------------- #
@@ -247,7 +266,7 @@ def serialize_schema(schema):
     # Object
     # --------------------------------------------------------------- #
     else:
-        if issubclass(schema_type, Model):
+        if issubclass(schema_type, ModelBase):
             return PeeweeObject(schema).serialize()
         elif issubclass(schema_type, Field):
             return schema.serialize()

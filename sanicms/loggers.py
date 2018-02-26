@@ -54,7 +54,7 @@ class JsonFormatter(logging.Formatter):
 
     def format(self, record):
         fields = record.__dict__.copy()
-        if 'args' in fields:
+        if 'args' in fields and fields['args']:
             data = fields.pop('args')
         else:
             data = fields
