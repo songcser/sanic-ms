@@ -56,9 +56,9 @@ class MigrationModel:
 
     def __init__(self):
         self._mr = MigrationRecord()
-        self._db.create_tables(self._mr, safe=True)
+        self._db.create_tables([self._mr], safe=True)
         if self._model:
-            self._db.create_tables(self._model, safe=True)
+            self._db.create_tables([self._model], safe=True)
             self._name = self._model._meta.db_table
 
     def add_column(self, col, field=None):
