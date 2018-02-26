@@ -60,7 +60,6 @@ def build_spec(app, loop):
                 or '<file_uri' in uri:
                 # TODO: add static flag in sanic routes
             continue
-        print("ddddddddd")
 
         # --------------------------------------------------------------- #
         # Methods
@@ -113,7 +112,6 @@ def build_spec(app, loop):
                         'required': True,
                     })
 
-            print(route_spec.produces)
             operationId = '%s_' % _handler.__name__ if not uri.endswith("/") \
                 else _handler.__name__
             endpoint = remove_nulls({

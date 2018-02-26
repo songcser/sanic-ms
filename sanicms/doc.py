@@ -171,10 +171,8 @@ class PeeweeObject(Field):
             return value
 
     def field_serialize(self, schema):
-        print(schema)
         field = schema.field
         db_field = field.field_type
-        print(field)
         if isinstance(field, ArrayField):
             return self.db_field_serialize('array', field.verbose_name, None,
                                            field.help_text)
@@ -238,7 +236,6 @@ class PeeweeObject(Field):
 
 def serialize_schema(schema):
     schema_type = type(schema)
-    print(schema_type)
     # --------------------------------------------------------------- #
     # Class
     # --------------------------------------------------------------- #
