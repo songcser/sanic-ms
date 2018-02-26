@@ -23,7 +23,7 @@ class MigrationRecord(Model):
                                 default=datetime.utcnow())
 
     class Meta:
-        db_table = 'migration_record'
+        table_name = 'migration_record'
         database = db
 
 def info(version=None, author=None, datetime=None):
@@ -56,10 +56,12 @@ class MigrationModel:
 
     def __init__(self):
         self._mr = MigrationRecord()
+        #  self._mr.create_table(safe)
         self._db.create_tables([self._mr], safe=True)
         if self._model:
-            self._db.create_tables([self._model], safe=True)
-            self._name = self._model._meta.db_table
+            self._model._meta.database = self._db
+            self._model.create_table(safe=True)
+            self._name = self._model._meta.table_name
 
     def add_column(self, col, field=None):
         print('Migrating==> [%s] add_column: %s' % (self._name, col))

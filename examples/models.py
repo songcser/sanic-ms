@@ -32,4 +32,4 @@ class Users(Model):
     role_id = IntegerField(verbose_name='role for user', help_text=RoleApi)
 
     class Meta:
-        db_table = 'users'
+        table_name = 'users'
