@@ -16,9 +16,7 @@ from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
 from aiohttp import ClientSession
 
-from sanicms.config import DB_CONFIG, ZIPKIN_SERVER, \
-    ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_ALLOW_HEADERS, \
-    ACCESS_CONTROL_ALLOW_METHODS
+from sanicms import load_config
 from sanicms.db import ConnectionPool
 from sanicms.client import Client
 from sanicms.utils import *
@@ -29,7 +27,7 @@ with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
 
 app = Sanic(__name__, error_handler=CustomHandler())
-app.config.ZIPKIN_SERVER = ZIPKIN_SERVER
+app.config = load_config()
 app.blueprint(openapi_blueprint)
 
 
@@ -37,12 +35,12 @@ app.blueprint(openapi_blueprint)
 async def before_srver_start(app, loop):
     queue = asyncio.Queue()
     app.queue = queue
-    loop.create_task(consume(queue, app.config.ZIPKIN_SERVER))
+    loop.create_task(consume(queue, app.config['ZIPKIN_SERVER']))
     reporter = AioReporter(queue=queue)
     tracer = BasicTracer(recorder=reporter)
     tracer.register_required_propagators()
     opentracing.tracer = tracer
-    app.db = await ConnectionPool(loop=loop).init(DB_CONFIG)
+    app.db = await ConnectionPool(loop=loop).init(app.config['DB_CONFIG'])
 
 
 @app.listener('before_server_stop')
@@ -52,10 +50,11 @@ async def before_server_stop(app, loop):
 
 @app.middleware('request')
 async def cros(request):
+    config = request.app.config
     if request.method == 'OPTIONS':
-        headers = {'Access-Control-Allow-Origin': ACCESS_CONTROL_ALLOW_ORIGIN,
-                   'Access-Control-Allow-Headers': ACCESS_CONTROL_ALLOW_HEADERS,
-                   'Access-Control-Allow-Methods': ACCESS_CONTROL_ALLOW_METHODS}
+        headers = {'Access-Control-Allow-Origin': config['ACCESS_CONTROL_ALLOW_ORIGIN'],
+                   'Access-Control-Allow-Headers': config['ACCESS_CONTROL_ALLOW_HEADERS'],
+                   'Access-Control-Allow-Methods': config['ACCESS_CONTROL_ALLOW_METHODS']}
         return json({'code': 0}, headers=headers)
     if request.method == 'POST' or request.method == 'PUT':
         request['data'] = request.json
@@ -65,6 +64,7 @@ async def cros(request):
 
 @app.middleware('response')
 async def cors_res(request, response):
+    config = app.config
     span = request['span'] if 'span' in request else None
     if response is None:
         return response
@@ -83,9 +83,9 @@ async def cors_res(request, response):
     if span:
         span.set_tag('component', request.app.name)
         span.finish()
-    response.headers["Access-Control-Allow-Origin"] = ACCESS_CONTROL_ALLOW_ORIGIN
-    response.headers["Access-Control-Allow-Headers"] = ACCESS_CONTROL_ALLOW_HEADERS
-    response.headers["Access-Control-Allow-Methods"] = ACCESS_CONTROL_ALLOW_METHODS
+    response.headers["Access-Control-Allow-Origin"] = config['CCESS_CONTROL_ALLOW_ORIGIN']
+    response.headers["Access-Control-Allow-Headers"] = config['ACCESS_CONTROL_ALLOW_HEADERS']
+    response.headers["Access-Control-Allow-Methods"] = config['ACCESS_CONTROL_ALLOW_METHODS']
     return response
 
 

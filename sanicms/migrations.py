@@ -6,10 +6,11 @@ from datetime import datetime
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
-from sanicms.config import DB_CONFIG
+from sanicms import load_config
 
+config = load_config()
 
-db = PostgresqlDatabase(**DB_CONFIG)
+db = PostgresqlDatabase(**config['DB_CONFIG'])
 migrator = PostgresqlMigrator(db)
 
 logger = logging.getLogger('sanic')

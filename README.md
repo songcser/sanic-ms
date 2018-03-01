@@ -36,6 +36,14 @@ Sanic框架是和Flask相似异步协程框架，简单轻量，并且性能很�
 ![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528423339.jpg)
 ![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528479787.jpg)
 
+## Config
+
+> 设置配置文件和Django相似，通过设置环境变量值SANIC_CONFIG_MODULE
+
+```
+export SANIC_CONFIG_MODULE='mysite.configs'
+```
+
 ## Server
 
 > 使用sanic异步框架，有较高的性能，但是使用不当会造成blocking, 对于有IO请求的都要选用异步库。**添加库要慎重**。
