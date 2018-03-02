@@ -64,7 +64,7 @@ async def cros(request):
 
 @app.middleware('response')
 async def cors_res(request, response):
-    config = app.config
+    config = request.app.config
     span = request['span'] if 'span' in request else None
     if response is None:
         return response
@@ -83,7 +83,7 @@ async def cors_res(request, response):
     if span:
         span.set_tag('component', request.app.name)
         span.finish()
-    response.headers["Access-Control-Allow-Origin"] = config['CCESS_CONTROL_ALLOW_ORIGIN']
+    response.headers["Access-Control-Allow-Origin"] = config['ACCESS_CONTROL_ALLOW_ORIGIN']
     response.headers["Access-Control-Allow-Headers"] = config['ACCESS_CONTROL_ALLOW_HEADERS']
     response.headers["Access-Control-Allow-Methods"] = config['ACCESS_CONTROL_ALLOW_METHODS']
     return response
