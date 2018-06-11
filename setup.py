@@ -18,7 +18,7 @@ setup(
         'asyncpg>=0.11.0',
         'aiohttp>=2.0.7',
         'futures==3.1.1',
-        'opentracing==1.2.2',
+        'opentracing==1.3.0',
         'basictracer>=2.2.0',
         'pyyaml>=3.12',
     ],
