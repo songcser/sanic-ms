@@ -1,0 +1,92 @@
+# PyLint configuration file for the project pymvpa.
+#
+# Agreed formatting (per yoh+michael voice dialog) is camel.
+#
+# This pylintrc file will use the default settings except for the
+# naming conventions, which will allow for camel case naming as found
+# in Java code or several libraries such as PyQt, etc.
+#
+# At some moment it was modified by yoh from the original one
+# which can be found on debian systems at
+# /usr/share/doc/pylint/examples/pylintrc_camelcase
+#
+# Just place it in ~/.pylintrc for user-wide installation or simply
+# use within a call to pylint or export environment variable
+# export PYLINTRC=$PWD/doc/misc/pylintrc
+
+
+[BASIC]
+# Regular expression which should only match correct module names
+module-rgx=([a-z][a-z0-9_]*)$
+
+attr-rgx=[a-z_][a-z0-9_]{,30}
+
+# Regular expression which should only match correct class names
+class-rgx=[A-Z_]+[a-zA-Z0-9]+$
+
+# Regular expression which should only match correct function names
+function-rgx=[a-z_]+[a-z0-9_][a-z0-9]*$
+
+# Regular expression which should only match correct method names
+# Allow upper cases in testFeatureSelection where FeatureSelection
+# is a class name
+method-rgx=(([a-z_]|__)[a-z0-9_]*(__)?|test[a-zA-Z0-9_]*)$
+
+# Regular expression which should only match correct argument names
+argument-rgx=[a-z][a-z0-9]*_*[a-z0-9]*_*[a-z0-9]*_?$
+
+# Regular expression which should only match correct variable names
+variable-rgx=([a-z_]+[a-z0-9]*_*[a-z0-9]*_*[a-z0-9]*_?||(__[a-zA-Z0-9_]*__))$||[A-Z]+
+
+# Regular expression which should only match correct module level names
+# Default: (([A-Z_][A-Z1-9_]*)|(__.*__))$
+const-rgx=([a-z_]+[a-z0-9]*_*[a-z0-9]*_*[a-z0-9]*_?|__[a-zA-Z0-9_]*__)$||[A-Z]+
+
+
+[FORMAT]
+indent-string='    '
+
+
+[DESIGN]
+
+# We are capable to follow that many, yes!
+max-branchs = 20
+
+# some base class constructors have quite a few arguments
+max-args = 14
+
+# and due to ClassWithCollections and conditional attributes classes by default have lots
+# of attributes
+max-attributes = 14
+
+# some sci computation can't be handled efficiently without having
+#lots of locals
+max-locals = 35
+
+[MESSAGES CONTROL]
+# Disable the following PyLint messages:
+disable=W,C,R,F,I
+
+[MASTER]
+ignore=toutiao_pb2
+
+[REPORTS]
+
+# set the output format. Available formats are text, parseable, colorized and
+# html
+output-format=colorized
+
+# Include message's id in output
+include-ids=yes
+
+# Tells wether to display a full report or only the messages
+reports=no
+
+[MISCELLANEOUS]
+
+# List of note tags to take in consideration, separated by a comma.
+# FIXME -- something which needs fixing
+# TODO  -- future plan
+# XXX   -- some concern
+# YYY   -- comment/answer to above mentioned concern
+notes=FIXME,TODO,XXX,YYY

@@ -22,6 +22,7 @@ from sanicms.client import Client
 from sanicms.utils import *
 from sanicms.loggers import AioReporter
 from sanicms.openapi import blueprint as openapi_blueprint
+from sanicms.service import Service
 
 with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
@@ -41,6 +42,11 @@ async def before_srver_start(app, loop):
     tracer.register_required_propagators()
     opentracing.tracer = tracer
     app.db = await ConnectionPool(loop=loop).init(app.config['DB_CONFIG'])
+
+@app.listener('after_server_start')
+async def after_server_start(app, loop):
+    service = Service(loop=loop)
+    await service.register_service(app.name, 8010)
 
 
 @app.listener('before_server_stop')

@@ -21,6 +21,7 @@ services:
       ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
       ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
       ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
+      CONSUL_HTTP_ADDR: 'consul1:8500'
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"
@@ -29,6 +30,8 @@ services:
 
   db:
     image: "postgres:9.6"
+    ports:
+      - "5432:5432"
     networks:
       - sanic-network
 
@@ -50,6 +53,35 @@ services:
       - sanic-network
     environment:
       API_URL: "http://localhost:8000/openapi/spec.json"
+
+  consul1:
+    image: "consul:1.1.0"
+    networks:
+      - sanic-network
+    environment: 
+      CONSUL_BIND_INTERFACE: eth0
+    ports:
+      - "8500:8500"
+
+  consul2:
+    image: "consul:1.1.0"
+    networks:
+      - sanic-network
+    depends_on:
+      - consul1
+    environment: 
+      CONSUL_BIND_INTERFACE: eth0
+    command: ["agent", "-dev", "-join=consul1"]
+
+  consul3:
+    image: "consul:1.1.0"
+    networks:
+      - sanic-network
+    depends_on:
+      - consul1
+    environment: 
+      CONSUL_BIND_INTERFACE: eth0
+    command: ["agent", "-dev", "-join=consul1"]
   
 
 networks:
