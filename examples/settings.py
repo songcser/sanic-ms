@@ -6,7 +6,7 @@ Basic config
 APP_ID = 'user-service'
 
 HOST = os.environ.get('SERVER_HOST', None)
-PORT = os.environ.get('SERVER_PORT', 8090)
+PORT = os.environ.get('SERVER_PORT', 8030)
 
 DB_CONFIG = {
     'host':  os.environ.get('POSTGRES_SERVICE_HOST', 'localhost'),
