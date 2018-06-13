@@ -1,3 +1,5 @@
+import ujson
+
 from sanicms.tests import APITestCase
 from server import app
 

@@ -27,8 +27,10 @@ from sanicms.service import Service
 with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
 
-app = Sanic(__name__, error_handler=CustomHandler())
-app.config = load_config()
+config = load_config()
+appid = config.get('APP_ID', __name__)
+app = Sanic(appid, error_handler=CustomHandler())
+app.config = config
 app.blueprint(openapi_blueprint)
 
 
@@ -43,14 +45,17 @@ async def before_srver_start(app, loop):
     opentracing.tracer = tracer
     app.db = await ConnectionPool(loop=loop).init(app.config['DB_CONFIG'])
 
+
 @app.listener('after_server_start')
 async def after_server_start(app, loop):
-    service = Service(loop=loop)
-    await service.register_service(app.name, 8010)
+    service = Service(app.name, loop=loop)
+    await service.register_service(app.config['PORT'])
+    app.service = service
 
 
 @app.listener('before_server_stop')
 async def before_server_stop(app, loop):
+    await app.servcie.deregister(app.service.servcie_id)
     app.queue.join()
 
 
@@ -58,9 +63,11 @@ async def before_server_stop(app, loop):
 async def cros(request):
     config = request.app.config
     if request.method == 'OPTIONS':
-        headers = {'Access-Control-Allow-Origin': config['ACCESS_CONTROL_ALLOW_ORIGIN'],
-                   'Access-Control-Allow-Headers': config['ACCESS_CONTROL_ALLOW_HEADERS'],
-                   'Access-Control-Allow-Methods': config['ACCESS_CONTROL_ALLOW_METHODS']}
+        headers = {
+            'Access-Control-Allow-Origin': config['ACCESS_CONTROL_ALLOW_ORIGIN'],
+            'Access-Control-Allow-Headers': config['ACCESS_CONTROL_ALLOW_HEADERS'],
+            'Access-Control-Allow-Methods': config['ACCESS_CONTROL_ALLOW_METHODS']
+        }
         return json({'code': 0}, headers=headers)
     if request.method == 'POST' or request.method == 'PUT':
         request['data'] = request.json

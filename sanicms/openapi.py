@@ -26,14 +26,15 @@ def remove_nulls(dictionary, deep=True):
 
 @blueprint.listener('before_server_start')
 def build_spec(app, loop):
+    config = app.config.get('SWAGGER')
     _spec['swagger'] = '2.0'
     _spec['info'] = remove_nulls({
-        "version": getattr(app.config, 'API_VERSION', '1.0.0'),
-        "title": getattr(app.config, 'API_TITLE', 'API'),
-        "description": getattr(app.config, 'API_DESCRIPTION', ''),
-        "termsOfService": getattr(app.config, 'API_TERMS_OF_SERVICE', None),
+        "version": config.get['version'] if config else '1.0.0',
+        "title": config['title'] if config else 'API',
+        "description": config['description'] if config else '',
+        "termsOfService": config['termsOfService'] if config else None,
         "contact": {
-            "email": getattr(app.config, 'API_CONTACT_EMAIL', None)
+            "email": config['contact_email'] if config else None
         },
         #  "license": {
         #      "email": getattr(app.config, 'API_LICENSE_NAME', None),
