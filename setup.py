@@ -21,6 +21,7 @@ setup(
         'opentracing==1.3.0',
         'basictracer>=2.2.0',
         'pyyaml>=3.12',
+        'python-consul==1.0.1',
     ],
     package_data={
         'sanicms': ['*.py', '*.yml'],
