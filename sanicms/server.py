@@ -55,7 +55,7 @@ async def after_server_start(app, loop):
 
 @app.listener('before_server_stop')
 async def before_server_stop(app, loop):
-    await app.servcie.deregister(app.service.servcie_id)
+    await app.service.deregister(app.service.servcie_id)
     app.queue.join()
 
 

@@ -29,7 +29,7 @@ def build_spec(app, loop):
     config = app.config.get('SWAGGER')
     _spec['swagger'] = '2.0'
     _spec['info'] = remove_nulls({
-        "version": config.get['version'] if config else '1.0.0',
+        "version": config['version'] if config else '1.0.0',
         "title": config['title'] if config else 'API',
         "description": config['description'] if config else '',
         "termsOfService": config['termsOfService'] if config else None,
