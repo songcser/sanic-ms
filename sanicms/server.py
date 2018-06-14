@@ -51,11 +51,11 @@ async def after_server_start(app, loop):
     service = Service(app.name, loop=loop)
     await service.register_service(app.config['PORT'])
     app.service = service
-
+    
 
 @app.listener('before_server_stop')
 async def before_server_stop(app, loop):
-    await app.service.deregister(app.service.servcie_id)
+    await app.service.deregister()
     app.queue.join()
 
 
