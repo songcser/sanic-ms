@@ -59,7 +59,10 @@ services:
     networks:
       - sanic-network
     environment: 
-      CONSUL_BIND_INTERFACE: eth0
+      - CONSUL_BIND_INTERFACE:eth0
+    # deploy:
+    #   placement:
+    #     constraints: [node == ms-master]
     ports:
       - "8500:8500"
 
@@ -70,7 +73,7 @@ services:
     depends_on:
       - consul1
     environment: 
-      CONSUL_BIND_INTERFACE: eth0
+      - CONSUL_BIND_INTERFACE:eth0
     command: ["agent", "-dev", "-join=consul1"]
 
   consul3:
@@ -80,7 +83,7 @@ services:
     depends_on:
       - consul1
     environment: 
-      CONSUL_BIND_INTERFACE: eth0
+      - CONSUL_BIND_INTERFACE:eth0
     command: ["agent", "-dev", "-join=consul1"]
   
 
