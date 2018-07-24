@@ -1,9 +1,9 @@
 version: '3'
 services:
   server:
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: 'examples_server'
+    # build: 
+    #   context: .
     links:
       - db
       - zipkin
@@ -61,11 +61,12 @@ services:
       - sanic-network
     environment: 
       - CONSUL_BIND_INTERFACE:eth0
-    # deploy:
-    #   placement:
-    #     constraints: [node == ms-master]
     ports:
       - "8500:8500"
+    deploy:
+      placement:
+        constraints:
+          - node.role == ms-agent
 
   consul2:
     image: "consul:1.1.0"
@@ -76,6 +77,10 @@ services:
     environment: 
       - CONSUL_BIND_INTERFACE:eth0
     command: ["agent", "-dev", "-join=consul1"]
+    deploy:
+      placement:
+        constraints:
+          - node.role == ms-agent1
 
   consul3:
     image: "consul:1.1.0"
@@ -86,9 +91,14 @@ services:
     environment: 
       - CONSUL_BIND_INTERFACE:eth0
     command: ["agent", "-dev", "-join=consul1"]
+    deploy:
+      placement:
+        constraints:
+          - node.role == ms-agent2
   
 
 networks:
   sanic-network:
-    driver: bridge
+    external: 
+      name: sanic-network
 
