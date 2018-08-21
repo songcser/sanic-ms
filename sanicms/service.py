@@ -11,9 +11,16 @@ class Service(object):
         self.service_id = name
         self.consul = consul.aio.Consul(host=host, port=port, loop=loop, **kwargs)
 
+    def get_host_ip(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+
     async def register_service(self, port, host=None, **kwargs):
         m = hashlib.md5()
-        address = host or socket.gethostbyname(socket.gethostname())
+        address = host or self.get_host_ip()
         url = 'http://{}:{}/'.format(address, port)
         m.update(url.encode('utf-8'))
         self.service_id = m.hexdigest()
