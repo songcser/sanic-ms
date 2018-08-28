@@ -4,13 +4,8 @@ services:
     image: 'examples_server'
     # build: 
     #   context: .
-    links:
-      - db
-      - zipkin
-    volumes:
-      - "${PWD}:/service"
     ports:
-      - "8000:8010"
+      - "8030:8030"
     networks:
       - sanic-network
     environment:
@@ -22,12 +17,17 @@ services:
       ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
       ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
       ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
-      CONSUL_HTTP_ADDR: 'consul1:8500'
+      CONSUL_HTTP_ADDR: 'consul:8500'
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"
     command: ["python", "-m", "server"]
     #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
+    deploy:
+      replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
 
   db:
     image: "postgres:9.6"
@@ -35,6 +35,10 @@ services:
       - "5432:5432"
     networks:
       - sanic-network
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   zipkin:
     image: "openzipkin/zipkin:2.4.2"
@@ -43,62 +47,56 @@ services:
       - "9411:9411"
     networks:
       - sanic-network
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   swagger:
     image: "swaggerapi/swagger-ui:v3.0.5"
-    links:
-      - server
     ports:
       - "8090:8080"
     networks:
       - sanic-network
     environment:
       API_URL: "http://localhost:8000/openapi/spec.json"
-
-  consul1:
-    image: "consul:1.1.0"
-    networks:
-      - sanic-network
-    environment: 
-      - CONSUL_BIND_INTERFACE:eth0
-    ports:
-      - "8500:8500"
     deploy:
       placement:
         constraints:
-          - node.role == ms-agent
+          - node.role == manager
 
-  consul2:
-    image: "consul:1.1.0"
-    networks:
-      - sanic-network
-    depends_on:
-      - consul1
-    environment: 
-      - CONSUL_BIND_INTERFACE:eth0
-    command: ["agent", "-dev", "-join=consul1"]
-    deploy:
-      placement:
-        constraints:
-          - node.role == ms-agent1
+#   consul1:
+#     image: "progrium/consul"
+#     networks:
+#       - sanic-network
+#     deploy:
+#       placement:
+#         constraints:
+#           - node.role == manager
+#     ports:
+#       - "8500:8500"
+#       - "8300:8300"
+#       - "8301:8301"
+#       - "8301:8301/udp"
+#       - "8302:8302"
+#       - "8302:8302/udp"
+#       - "8400:8400"
+#     command: ["-server", "-advertise 192.168.99.100", "-bootstrap"]
 
-  consul3:
-    image: "consul:1.1.0"
-    networks:
-      - sanic-network
-    depends_on:
-      - consul1
-    environment: 
-      - CONSUL_BIND_INTERFACE:eth0
-    command: ["agent", "-dev", "-join=consul1"]
-    deploy:
-      placement:
-        constraints:
-          - node.role == ms-agent2
-  
+#   consul2:
+#     image: "progrium/consul"
+#     networks:
+#       - sanic-network
+#     depends_on:
+#       - consul1
+#     deploy:
+#       replicas: 2
+#       placement:
+#         constraints:
+#           - node.role == worker
+#     command: ["-server", "-advertise 192.168.99.101", "-join=192.168.99.100"]
 
 networks:
   sanic-network:
-    external: 
-      name: sanic-network
-
+    external:
+        name: ms_sanic-network
