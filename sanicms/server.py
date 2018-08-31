@@ -9,20 +9,19 @@ import yaml
 import os
 import opentracing
 
+from collections import defaultdict
 from basictracer import BasicTracer
 
 from sanic import Sanic, config
 from sanic.response import json, text, HTTPResponse
 from sanic.exceptions import RequestTimeout, NotFound
-from aiohttp import ClientSession
 
 from sanicms import load_config
 from sanicms.db import ConnectionPool
-from sanicms.client import Client
 from sanicms.utils import *
 from sanicms.loggers import AioReporter
 from sanicms.openapi import blueprint as openapi_blueprint
-from sanicms.service import Service
+from sanicms.service import ServiceManager
 
 with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
@@ -44,14 +43,20 @@ async def before_srver_start(app, loop):
     tracer.register_required_propagators()
     opentracing.tracer = tracer
     app.db = await ConnectionPool(loop=loop).init(app.config['DB_CONFIG'])
+    service_names = app.config['SERVICES']
+    app.services = defaultdict(list)
+    service = ServiceManager(loop=loop)
+    for name in service_names:
+        s = service.discovery_service(name)
+        app.services[s].extend(s) 
 
 
 @app.listener('after_server_start')
 async def after_server_start(app, loop):
-    service = Service(app.name, loop=loop)
+    service = ServiceManager(app.name, loop=loop)
     await service.register_service(app.config['PORT'])
     app.service = service
-    
+       
 
 @app.listener('before_server_stop')
 async def before_server_stop(app, loop):

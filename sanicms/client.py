@@ -1,19 +1,31 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import random
 import logging
 import opentracing
 from aiohttp import ClientSession, hdrs
 
 logger = logging.getLogger('sanic')
 
+
 class Client:
 
-    def __init__(self, loop=None, url=None, client=None, **kwargs):
-        self._client = client if client else ClientSession(loop=loop, **kwargs)
+    def __init__(self, name, app=None, url=None, client=None, **kwargs):
+        self.name = name
+        self._client = client if client else ClientSession(loop=app.loop, **kwargs)
+        self.services = app.services[self.name]
         self._url = url
 
+    def handler_url(self):
+        if self._url:
+            return
+        if self.services:
+            s = random.choice(self.services)
+            self._url = 'http://{}:{}'.format(s.service_address, s.service_port)
+
     def cli(self, req):
+        self.handler_url()
         span = opentracing.tracer.start_span(operation_name='get', child_of=req['span'])
         return ClientSessionConn(self._client, url=self._url, span=span)
 
@@ -33,7 +45,7 @@ class ClientSessionConn:
         if url.startswith("http"):
             return url
         if self._url:
-            return "{}{}".format(self._url, url)
+            return "{}/{}".format(self._url, url)
         return url
 
     def before(self, method, url):
