@@ -31,7 +31,7 @@ async def get_role_by_id(request, id):
 @user_bp.post('/', name="create_user")
 @doc.summary('create user')
 @doc.description('create user info')
-@doc.consumes(Users)
+@doc.consumes(User)
 @doc.produces({'id': int})
 async def create_user(request):
     data = request['data']
@@ -46,7 +46,7 @@ async def create_user(request):
 
 @user_bp.get('/', name="get_users")
 @doc.summary("get user list")
-@doc.produces([Users])
+@doc.produces([User])
 async def get_users(request):
     async with request.app.db.acquire(request) as cur:
         records = await cur.fetch(""" SELECT * FROM users """)
@@ -54,7 +54,7 @@ async def get_users(request):
 
 @user_bp.get('/<id:int>', name="get_user")
 @doc.summary("get user info")
-@doc.produces(Users)
+@doc.produces(User)
 async def get_user(request, id):
     async with request.app.db.acquire(request) as cur:
         records = await cur.fetch(

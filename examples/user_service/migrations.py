@@ -1,13 +1,16 @@
 import logging
 from playhouse.migrate import *
-from peewee import ProgrammingError
 
-from sanicms.migrations import MigrationModel, info, db
-from models import *
+from sanicms.migrations import (
+    MigrationModel,
+    info,
+    db_manager,
+)
+from models import User
 
 
 class UserMigration(MigrationModel):
-    _model = Users
+    _model = User
 
     #  @info(version="v1")
     #  def migrate_v1(self):
@@ -16,7 +19,7 @@ class UserMigration(MigrationModel):
 def migrations():
     um = UserMigration()
     try:
-        with db.transaction():
+        with db_manager.transaction():
             um.auto_migrate()
             print("Success Migration")
     except Exception as e:

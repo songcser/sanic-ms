@@ -1,5 +1,4 @@
 FROM python:3.6-alpine3.6
-MAINTAINER songjiyi2008@163.com
 
 ADD . /service
 WORKDIR /service

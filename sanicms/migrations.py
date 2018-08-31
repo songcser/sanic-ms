@@ -2,7 +2,8 @@
 # -*- coding: utf-8 -*-
 
 import logging
-from datetime import datetime
+import datetime
+
 from playhouse.migrate import *
 from peewee import ProgrammingError
 
@@ -10,8 +11,8 @@ from sanicms import load_config
 
 config = load_config()
 
-db = PostgresqlDatabase(**config['DB_CONFIG'])
-migrator = PostgresqlMigrator(db)
+db_manager = PostgresqlDatabase(**config['DB_CONFIG'])
+migrator = PostgresqlMigrator(db_manager)
 
 logger = logging.getLogger('sanic')
 
@@ -21,11 +22,11 @@ class MigrationRecord(Model):
     version = CharField()
     author = CharField()
     create_time = DateTimeField(verbose_name='创建时间',
-                                default=datetime.utcnow())
+                                default=datetime.datetime.utcnow())
 
     class Meta:
         table_name = 'migration_record'
-        database = db
+        database = db_manager
 
 def info(version=None, author=None, datetime=None):
     def decorator(fn):
@@ -52,8 +53,9 @@ def info(version=None, author=None, datetime=None):
     return decorator
 
 class MigrationModel:
-    _db = db
+    _db = db_manager
     _migrator = migrator
+    _model = None
 
     def __init__(self):
         self._mr = MigrationRecord()

@@ -1,7 +1,12 @@
 import datetime
 
-from peewee import Model, DateTimeField, IntegerField, PrimaryKeyField, \
+from peewee import (
+    Model,
+    DateTimeField,
+    IntegerField,
+    PrimaryKeyField,
     CharField
+)
 from sanicms import doc
 
 
@@ -21,7 +26,7 @@ class RoleApi:
     name = doc.String('name')
 
 
-class Users(Model):
+class User(Model):
     id = PrimaryKeyField()
     create_time = DateTimeField(verbose_name='create time',
                                 default=datetime.datetime.utcnow)
