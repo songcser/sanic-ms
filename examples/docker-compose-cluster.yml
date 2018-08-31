@@ -21,7 +21,7 @@ services:
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"
-    command: ["python", "-m", "server"]
+    command: ["python", "-m", "user_service.server"]
     #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
     deploy:
       replicas: 2

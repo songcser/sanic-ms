@@ -17,7 +17,7 @@ user_bp = Blueprint('user', url_prefix='users')
 
 @logger()
 async def get_city_by_id(request, id):
-    cli = request.app.client.cli(request)
+    cli = request.app.region_client.cli(request)
     async with cli.get('/cities/{}'.format(id)) as res:
         return await res.json()
 
@@ -27,12 +27,6 @@ async def get_role_by_id(request, id):
     async with cli.get('/roles/{}'.format(id)) as res:
         return await res.json()
 
-async def async_request(datas):
-    # async handler request
-    results = await asyncio.gather(*[data[2] for data in datas])
-    for index, obj in enumerate(results):
-        data = datas[index]
-        data[0][data[1]] = results[index]
 
 @user_bp.post('/', name="create_user")
 @doc.summary('create user')
@@ -66,7 +60,8 @@ async def get_user(request, id):
         records = await cur.fetch(
             """ SELECT * FROM users WHERE id = $1 """, id)
         datas = [
-            [records, 'city_id', get_city_by_id(request, records['city_id'])]
+            [records, 'city_id', get_city_by_id(request, records['city_id'])],
             [records, 'role_id', get_role_by_id(request, records['role_id'])]
         ]
+        await async_request(datas)
         return records
