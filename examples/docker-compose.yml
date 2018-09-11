@@ -1,16 +1,18 @@
 version: '3'
 services:
-  server:
+  user_server:
     build: 
       context: .
       dockerfile: Dockerfile
+      args:
+        - service=user_service
     links:
       - db
       - zipkin
     volumes:
-      - "${PWD}:/service"
+      - "${PWD}/user_service:/service"
     ports:
-      - "8000:8010"
+      - "8030:8030"
     networks:
       - sanic-network
     environment:
@@ -26,8 +28,71 @@ services:
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"
-    command: ["python", "-m", "user_service.server"]
+    command: ["python", "-m", "server"]
     #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
+
+  region_server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - service=region_service
+    links:
+      - db
+      - zipkin
+    volumes:
+      - "${PWD}/region_service:/service"
+    ports:
+      - "8050:8050"
+    networks:
+      - sanic-network
+    environment:
+      POSTGRES_SERVICE_DB_NAME: postgres
+      POSTGRES_SERVICE_USER: postgres
+      POSTGRES_SERVICE_HOST: db
+      POSTGRES_SERVICE_PORT: 5432
+      ACCESS_CONTROL_ALLOW_ORIGIN: "*"
+      ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
+      ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
+      ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
+      CONSUL_HTTP_ADDR: 'consul:8500'
+      #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
+    depends_on:
+      - "db"
+    command: ["python", "-m", "server"]
+    #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
+
+  role_server:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - service=role_service
+    links:
+      - db
+      - zipkin
+    volumes:
+      - "${PWD}/role_service:/service"
+    ports:
+      - "8020:8020"
+    networks:
+      - sanic-network
+    environment:
+      POSTGRES_SERVICE_DB_NAME: postgres
+      POSTGRES_SERVICE_USER: postgres
+      POSTGRES_SERVICE_HOST: db
+      POSTGRES_SERVICE_PORT: 5432
+      ACCESS_CONTROL_ALLOW_ORIGIN: "*"
+      ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
+      ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
+      ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
+      CONSUL_HTTP_ADDR: 'consul:8500'
+      #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
+    depends_on:
+      - "db"
+    command: ["python", "-m", "server"]
+    #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
+
 
   db:
     image: "postgres:9.6"
@@ -46,8 +111,6 @@ services:
 
   swagger:
     image: "swaggerapi/swagger-ui:v3.0.5"
-    links:
-      - server
     ports:
       - "8090:8080"
     networks:

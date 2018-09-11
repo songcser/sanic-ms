@@ -23,7 +23,7 @@ async def add_city(request):
                 RETURNING id
             """, data['name']
         )
-        return {'id': record['id'])
+        return {'id': record['id']}
     
 
 @region_bp.get('/cities/<id:int>', name='get_city')

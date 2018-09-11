@@ -1,6 +1,8 @@
 FROM python:3.6-alpine3.6
 
-ADD . /service
+ARG service
+ADD ${service}/. /service
+ADD requirements.txt /service/
 WORKDIR /service
 
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
