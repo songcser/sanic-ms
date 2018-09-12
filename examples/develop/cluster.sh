@@ -38,7 +38,7 @@ for node in "${SWARM_NODES[@]}"; do
     docker-machine create $node -d virtualbox
     eval $(docker-machine env $node)
     docker swarm join --token $SWARM_MASTER_TOKEN $SWARM_MASTER_IP:2377
-    docker-compose build server
+    docker-compose build
     NODE_IP=$(docker-machine ip $node)
     docker run -d --name "consul" --hostname $node \
         -p 8300:8300 \

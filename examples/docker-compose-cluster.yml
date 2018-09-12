@@ -1,7 +1,7 @@
 version: '3'
 services:
-  server:
-    image: 'examples_server'
+  user_server:
+    image: 'examples_user_server'
     # build: 
     #   context: .
     ports:
@@ -21,10 +21,68 @@ services:
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"
-    command: ["python", "-m", "user_service.server"]
+    command: ["python", "-m", "server"]
     #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
     deploy:
       replicas: 2
+      placement:
+        constraints:
+          - node.role == worker
+
+  region_server:
+    image: 'examples_region_server'
+    # build: 
+    #   context: .
+    ports:
+      - "8050:8050"
+    networks:
+      - sanic-network
+    environment:
+      POSTGRES_SERVICE_DB_NAME: postgres
+      POSTGRES_SERVICE_USER: postgres
+      POSTGRES_SERVICE_HOST: db
+      POSTGRES_SERVICE_PORT: 5432
+      ACCESS_CONTROL_ALLOW_ORIGIN: "*"
+      ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
+      ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
+      ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
+      CONSUL_HTTP_ADDR: 'consul:8500'
+      #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
+    depends_on:
+      - "db"
+    command: ["python", "-m", "server"]
+    #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  role_server:
+    image: 'examples_role_server'
+    # build: 
+    #   context: .
+    ports:
+      - "8020:8020"
+    networks:
+      - sanic-network
+    environment:
+      POSTGRES_SERVICE_DB_NAME: postgres
+      POSTGRES_SERVICE_USER: postgres
+      POSTGRES_SERVICE_HOST: db
+      POSTGRES_SERVICE_PORT: 5432
+      ACCESS_CONTROL_ALLOW_ORIGIN: "*"
+      ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
+      ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
+      ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
+      CONSUL_HTTP_ADDR: 'consul:8500'
+      #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
+    depends_on:
+      - "db"
+    command: ["python", "-m", "server"]
+    #command: ["python", "-m", 'sanic', "service.server.app", "--workers=4", "--port=8000", "--host=0.0.0.0"]
+    deploy:
+      replicas: 1
       placement:
         constraints:
           - node.role == worker
