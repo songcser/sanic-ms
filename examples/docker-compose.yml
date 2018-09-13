@@ -24,7 +24,8 @@ services:
       ACCESS_CONTROL_ALLOW_HEADERS: "Content-Type"
       ACCESS_CONTROL_ALLOW_METHODS: "POST, PUT, DELETE, GET"
       ZIPKIN_SERVER: 'http://zipkin:9411/api/v1/spans'
-      CONSUL_HTTP_ADDR: 'consul:8500'
+      CONSUL_AGENT_HOST: 'consul'
+      CONSUL_AGENT_PORT: 8500
       #command: python -m sanic server.app --host=0.0.0.0 --port=8000 --workers=4
     depends_on:
       - "db"

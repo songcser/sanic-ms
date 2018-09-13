@@ -52,6 +52,11 @@ docker-compose logs
 docker-compose logs -f server
 ```
 
+## Cluster Service
+```sh
+./develop/cluster.sh
+```
+
 ## Test
 
 ```
@@ -79,3 +84,9 @@ open http://localhost:9411
 ```
 ![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528423339.jpg)
 ![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528479787.jpg)
+
+## Access Consul
+```
+open http://192.168.99.100:8500/ui/#/dc1/services
+```
+![image](https://github.com/songcser/sanic-ms/raw/master/examples/images/1514528479788.jpg)

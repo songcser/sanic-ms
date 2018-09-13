@@ -61,3 +61,8 @@ class ServiceManager(object):
                     service_tags=['ServiceTags']
                 ))
         return services
+
+    async def discovery_services(self):
+        catalog =self.consul.catalog
+        result = await catalog.services()
+        return result
