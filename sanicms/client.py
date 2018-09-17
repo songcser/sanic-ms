@@ -21,7 +21,7 @@ class Client:
         if self._url:
             return
         if self.services:
-            s = random.choice(self.services)
+            s = random.choice(list(self.services))
             self._url = 'http://{}:{}'.format(s.service_address, s.service_port)
 
     def cli(self, req):

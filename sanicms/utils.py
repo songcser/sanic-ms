@@ -148,5 +148,3 @@ def create_span(span_id, parent_span_id, trace_id, span_name,
         'binaryAnnotations': binary_annotations
     }
     return span_dict
-
-

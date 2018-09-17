@@ -8,4 +8,4 @@ def load_config():
         path = '%s.py' % module.replace('.', '/')
         conf.from_pyfile(path)
     return conf
-
+    

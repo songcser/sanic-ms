@@ -21,7 +21,7 @@ from sanicms.db import ConnectionPool
 from sanicms.utils import *
 from sanicms.loggers import AioReporter
 from sanicms.openapi import blueprint as openapi_blueprint
-from sanicms.service import ServiceManager
+from sanicms.service import ServiceManager, service_watcher
 
 with open(os.path.join(os.path.dirname(__file__), 'logging.yml'), 'r') as f:
     logging.config.dictConfig(yaml.load(f))
@@ -34,21 +34,22 @@ app.blueprint(openapi_blueprint)
 
 
 @app.listener('before_server_start')
-async def before_srver_start(app, loop):
+async def before_server_start(app, loop):
     queue = asyncio.Queue()
     app.queue = queue
     loop.create_task(consume(queue, app.config['ZIPKIN_SERVER']))
+    loop.create_task(service_watcher(app, loop))
     reporter = AioReporter(queue=queue)
     tracer = BasicTracer(recorder=reporter)
     tracer.register_required_propagators()
     opentracing.tracer = tracer
     app.db = await ConnectionPool(loop=loop).init(app.config['DB_CONFIG'])
-    service = ServiceManager(loop=loop, host=app.config['CONSUL_AGENT_HOST'])
-    services = await service.discovery_services()
-    app.services = defaultdict(list)
-    for name in services[1].keys():
-        s = await service.discovery_service(name)
-        app.services[name].extend(s)
+    # service = ServiceManager(loop=loop, host=app.config['CONSUL_AGENT_HOST'])
+    # services = await service.discovery_services()
+    # app.services = defaultdict(list)
+    # for name in services[1].keys():
+    #     s = await service.discovery_service(name)
+    #     app.services[name].extend(s)
 
 
 @app.listener('after_server_start')

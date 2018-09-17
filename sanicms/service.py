@@ -3,6 +3,10 @@ import consul
 import consul.aio
 import socket
 import hashlib
+import asyncio
+
+from collections import defaultdict
+
 
 class ServiceInfo(object):
     
@@ -31,7 +35,9 @@ class ServiceManager(object):
         s.close()
         return ip
 
-    async def register_service(self, port, host=None, **kwargs):
+    async def register_service(self, host=None, port=None):
+        if not port:
+            return
         m = hashlib.md5()
         address = host or self.get_host_ip()
         url = 'http://{}:{}/'.format(address, port)
@@ -39,7 +45,8 @@ class ServiceManager(object):
         self.service_id = m.hexdigest()
         service = self.consul.agent.service
         check = consul.Check.http(url, '10s')
-        await service.register(self.name, service_id=self.service_id, address=address, port=port, check=check, **kwargs)
+        await service.register(self.name, service_id=self.service_id,
+                               address=address, port=port, check=check)
 
     async def deregister(self):
         service = self.consul.agent.service
@@ -63,6 +70,31 @@ class ServiceManager(object):
         return services
 
     async def discovery_services(self):
-        catalog =self.consul.catalog
+        catalog = self.consul.catalog
         result = await catalog.services()
         return result
+
+    async def check_service(self, service_name):
+        health = self.consul.health
+        checks = health.service(service_name)
+        res = {}
+        for check in checks:
+            res[check['ServiceID']] = check
+        return res
+
+
+async def service_watcher(app, loop):
+    service = ServiceManager(loop=loop, host=app.config['CONSUL_AGENT_HOST'])
+    app.services = defaultdict(list)
+    while True:
+        services = await service.discovery_services()
+        for name in services[1].keys():
+            result = await service.discovery_service(name)
+            checks = await service.check_service(name)
+            for res in result:
+                status = checks[res.service_id]['Status']
+                if status == 'critical':
+                    app.services[name].discard(res)
+                elif status == 'passing':
+                    app.services[name].add(res)
+        asyncio.sleep(10)
