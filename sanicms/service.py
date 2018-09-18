@@ -20,6 +20,9 @@ class ServiceInfo(object):
         self.address = address
         self.service_tags = service_tags
 
+    def __hash__(self):
+        return self.service_id or self.service_address or self.service_name
+
 
 class ServiceManager(object):
 
@@ -93,8 +96,8 @@ async def service_watcher(app, loop):
             checks = await service.check_service(name)
             for res in result:
                 status = checks[res.service_id]['Status']
-                if status == 'critical':
-                    app.services[name].discard(res)
-                elif status == 'passing':
+                if status == 'passing':
                     app.services[name].add(res)
+                elif status == 'passing':
+                    app.services[name].discard(res)
         asyncio.sleep(10)
