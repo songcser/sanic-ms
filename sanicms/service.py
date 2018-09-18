@@ -20,8 +20,14 @@ class ServiceInfo(object):
         self.address = address
         self.service_tags = service_tags
 
+    def __eq__(self, value):
+        return self.service_id == value.service_id
+
+    def __ne__(self, value):
+        return (not self.__eq__(value))
+
     def __hash__(self):
-        return self.service_id or self.service_address or self.service_name
+        return hash(self.service_id or self.service_address or self.service_name)
 
 
 class ServiceManager(object):
