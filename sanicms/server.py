@@ -37,7 +37,7 @@ app.blueprint(openapi_blueprint)
 async def before_server_start(app, loop):
     queue = asyncio.Queue()
     app.queue = queue
-    loop.create_task(consume(queue, app.config['ZIPKIN_SERVER']))
+    loop.create_task(consume(queue, app))
     loop.create_task(service_watcher(app, loop))
     reporter = AioReporter(queue=queue)
     tracer = BasicTracer(recorder=reporter)
@@ -57,7 +57,7 @@ async def after_server_start(app, loop):
     service = ServiceManager(app.name, loop=loop, host=app.config['CONSUL_AGENT_HOST'])
     await service.register_service(app.config['PORT'])
     app.service = service
-       
+
 
 @app.listener('before_server_stop')
 async def before_server_stop(app, loop):

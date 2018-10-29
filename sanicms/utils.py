@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import json
 import logging
 import asyncio
 import aiohttp
@@ -36,7 +37,8 @@ def id_to_hex(id):
         return None
     return '{0:x}'.format(id)
 
-async def consume(q, zs):
+async def consume(q, app):
+    zs = app.config['ZIPKIN_SERVER']
     async with aiohttp.ClientSession() as session:
         while True:
             # wait for an item from the producer
@@ -112,7 +114,7 @@ class CustomHandler(ErrorHandler):
             span.set_tag('http.status_code', str(exception.status_code))
             span.set_tag('error.kind', exception.__class__.__name__)
             span.set_tag('error.msg', exception.message)
-            return json(data, status=exception.status_code)
+            return json.dumps(data, status=exception.status_code)
         return super().default(request, exception)
 
 def before_request(request):

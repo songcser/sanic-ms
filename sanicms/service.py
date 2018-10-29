@@ -7,6 +7,8 @@ import asyncio
 
 from collections import defaultdict
 
+logger = logging.getLogger('sanic')
+
 
 class ServiceInfo(object):
     
@@ -56,10 +58,13 @@ class ServiceManager(object):
         check = consul.Check.http(url, '10s')
         await service.register(self.name, service_id=self.service_id,
                                address=address, port=port, check=check)
+        logger.info('register service: name: {}, service_id: {}, address: {}, port:{}'
+            .format(self.name, self.service_id, address, port))
 
     async def deregister(self):
         service = self.consul.agent.service
         await service.deregister(self.service_id)
+        logger.info('deregister service: {}'.format(self.service_id))
 
     async def discovery_service(self, service_name):
         catalog = self.consul.catalog
@@ -94,10 +99,13 @@ class ServiceManager(object):
 
 async def service_watcher(app, loop):
     service = ServiceManager(loop=loop, host=app.config['CONSUL_AGENT_HOST'])
+    logger.info('service watcher...')
     app.services = defaultdict(list)
     while True:
         services = await service.discovery_services()
         for name in services[1].keys():
+            if 'consul' == name:
+                continue
             result = await service.discovery_service(name)
             checks = await service.check_service(name)
             for res in result:
