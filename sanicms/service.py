@@ -47,11 +47,11 @@ class ServiceManager(object):
         return ip
 
     async def register_service(self, host=None, port=None):
-        logger.info('register service...')
         if not port:
             return
         m = hashlib.md5()
         address = host or self.get_host_ip()
+        logger.info('register service ==> host:{}, port{}'.format(address, port))
         url = 'http://{}:{}/'.format(address, port)
         m.update(url.encode('utf-8'))
         self.service_id = m.hexdigest()

@@ -4,6 +4,7 @@ log() {
 
 SWARM_MASTER=ms-master
 NETWORK_NAME=ms_sanic-network
+docker-machine rm -f $SWARM_MASTER
 docker-machine create $SWARM_MASTER -d virtualbox
 
 eval $(docker-machine env $SWARM_MASTER)
@@ -35,6 +36,7 @@ docker run -d --name $SWARM_MASTER --hostname $SWARM_MASTER \
 
 SWARM_NODES=("ms-node1" "ms-node2")
 for node in "${SWARM_NODES[@]}"; do
+    docker-machine rm -f $node
     docker-machine create $node -d virtualbox
     eval $(docker-machine env $node)
     docker swarm join --token $SWARM_MASTER_TOKEN $SWARM_MASTER_IP:2377

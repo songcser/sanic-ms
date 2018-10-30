@@ -116,14 +116,14 @@ def logger(type=None, category=None, detail=None, description=None,
             }
             span = None
             if request and tracing:
-                #oldspan = request['span']
+                # oldspan = request['span']
                 span = gen_span(request, fn.__name__)
-                span.tags.update(log)
-                #request['span'] = span
-                log.update({
-                    'start_time': span.start_time,
-                    'trace_id': span.context.trace_id
-                })
+                # span.tags.update(log)
+                # request['span'] = span
+                # log.update({
+                #     'start_time': span.start_time,
+                #     'trace_id': span.context.trace_id
+                # })
             else:
                 start_time = time.time()
                 log.update({
@@ -136,7 +136,7 @@ def logger(type=None, category=None, detail=None, description=None,
             try:
                 exce = False
                 res = await fn(*args, **kwargs)
-                #request['span'] = oldspan
+                # request['span'] = oldspan
                 return res
             except Exception as e:
                 exce = True
@@ -147,10 +147,10 @@ def logger(type=None, category=None, detail=None, description=None,
                         span.set_tag(
                             'component', '{}-{}'.format(request.app.name, log['log_type']))
                         span.finish()
-                        log.update({
-                            'duration': span.duration,
-                            'end_time': span.start_time + span.duration
-                        })
+                        # log.update({
+                        #     'duration': span.duration,
+                        #     'end_time': span.start_time + span.duration
+                        # })
                     else:
                         end_time = time.time()
                         log.update({
