@@ -11,7 +11,7 @@ logger = logging.getLogger('sanic')
 
 
 class ServiceInfo(object):
-    
+
     def __init__(self, service_name, service_id, service_address, service_port,
                  node, address, service_tags=None):
         self.service_name = service_name
@@ -47,11 +47,12 @@ class ServiceManager(object):
         return ip
 
     async def register_service(self, host=None, port=None):
+        logger.info('register service ==> port: {}'.format(port))
         if not port:
             return
         m = hashlib.md5()
         address = host or self.get_host_ip()
-        logger.info('register service ==> host:{}, port{}'.format(address, port))
+        logger.info('register service ==> host:{}, port:{}'.format(address, port))
         url = 'http://{}:{}/'.format(address, port)
         m.update(url.encode('utf-8'))
         self.service_id = m.hexdigest()
