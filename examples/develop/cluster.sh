@@ -1,3 +1,5 @@
+#!/usr/bin/env bash
+source "$(dirname ${BASH_SOURCE[0]})/utils.sh"
 log() {
 	echo "=== $1"
 }
@@ -18,6 +20,7 @@ log "Swarm token is: $SWARM_MASTER_TOKEN"
 
 docker network create --attachable --driver overlay $NETWORK_NAME
 
+log "Run progrium/consul"
 docker run -d --name $SWARM_MASTER --hostname $SWARM_MASTER \
 		-p 8300:8300 \
 		-p 8301:8301 \
@@ -36,6 +39,7 @@ docker run -d --name $SWARM_MASTER --hostname $SWARM_MASTER \
 
 SWARM_NODES=("ms-node1" "ms-node2")
 for node in "${SWARM_NODES[@]}"; do
+    log "Create node $node"
     docker-machine rm -f $node
     docker-machine create $node -d virtualbox
     eval $(docker-machine env $node)
@@ -60,4 +64,9 @@ for node in "${SWARM_NODES[@]}"; do
 done
 
 eval $(docker-machine env $SWARM_MASTER)
+log "Deploy stack ms"
 docker stack deploy -c docker-compose-cluster.yml ms
+MS_DB_TASK_ID=`docker service ps -q ms_db`
+waituntil 200 ">>> connect postgres" docker exec ms_db.1.$MS_DB_TASK_ID pg_isready
+log "Deploy stack ms"
+docker stack deploy -c docker-compose-service-cluster.yml ms-service

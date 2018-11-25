@@ -8,7 +8,7 @@ waituntil () {
   until echo "trying to ${msg} $((count+1))" && "$@"
   do
     count=$((count+1))
-    sleep 5
+    sleep 10
 
     if [ "$count" -ge "$limit" ]
     then
